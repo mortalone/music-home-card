@@ -1,4 +1,4 @@
-# Music Home 0.2.0
+# Music Home 0.2.1
 
 A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: the basic library/search/player requires no MA URL, token, new add-on or frontend build tools. The optional AI DJ and MA recommendation feeds use server-side HA REST commands.
 
@@ -44,11 +44,11 @@ Primary API references: [HA MA services](https://github.com/home-assistant/core/
 
 ## Manual installation
 
-Copy `music-home-card.js` to `/config/www/` and register `/local/music-home-card.js?v=0.2.0` as a JavaScript module. Use either the manual resource or the HACS resource, not both.
+Copy `music-home-card.js` to `/config/www/` and register `/local/music-home-card.js?v=0.2.1` as a JavaScript module. Use either the manual resource or the HACS resource, not both.
 
 ## Development
 
-`music-home-card.js` is the source and the deployable single-file card. Browser fixtures are in `tests/`. GitHub Actions checks syntax and runs the browser tests before publishing `v0.2.0`. Future card versions are released separately from Party Mode.
+`music-home-card.js` is the source and the deployable single-file card. Browser fixtures are in `tests/`. GitHub Actions checks syntax and runs the browser tests before publishing `v0.2.1`. Future card versions are released separately from Party Mode.
 
 ## AI DJ and Music Assistant recommendations (optional)
 
@@ -61,6 +61,6 @@ The card calls HA's authenticated websocket connection; tokens remain in HA secr
 
 Home adds recently added playlists/albums, favorite artists and a changing selection from favorite tracks using the MA library. With the optional MA bridge it also shows **Senest spillet** and up to eight real MA/provider recommendation rows (set `recommendation_rows: 1`–`16`). Titles/content come from MA and depend on provider support, history and permissions. Spotify's private app home feed is not reproduced or fabricated. A row can be absent or empty. Two recommendation requests run concurrently; results are cached for 60 seconds and refresh clears the cache. Cover rails show up to 20 items and **Se alle** shows up to 120 returned by that provider row.
 
-**Favoritter** on Home opens all favorite categories, including albums, artists, playlists, tracks, radio, podcasts and audiobooks. Each overview rail has **Vis alle**; category pages filter favorite=true and support pagination.
+**Dine favoritter** is always a Home section with **Vis alle**, independent of the top button. The filter icon beside **Favoritter** clarifies that it opens a view restricted to favorites. **Favoritter** on Home opens all favorite categories, including albums, artists, playlists, tracks, radio, podcasts and audiobooks. Each overview rail has **Vis alle**; category pages filter favorite=true and support pagination.
 
-The volume button at the top always shows the selected player's current percentage; tap it for a slider. The volume button beside the miniplayer opens the same control. Keep `height: 100dvh` for a kiosk with no HA header.
+At the top, **− · percentage · +** changes volume in steps of five percentage points, bounded to 0–100%. Quick successive presses accumulate and their HA calls are serialized. The speaker button beside the miniplayer opens the slider. Keep `height: 100dvh` for a kiosk with no HA header.

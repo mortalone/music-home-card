@@ -35,8 +35,20 @@ const assert=require('assert');const fs=require('fs');
  // New home sections use MA library sort/favorite filters and genuine provider rows.
  await page.getByText('Mere af det, du synes godt om',{exact:true}).waitFor();
  assert((await page.locator('.header-volume-value').textContent()).includes('%'));
+ assert.equal(await page.locator('[data-favorites] svg').count(),1,'Top favorite shortcut has a filter icon');
+ assert.equal(await page.locator('.favorite-section [data-favorites]').textContent(),'Vis alle');
+ const volumeBefore=await page.evaluate(()=>calls.filter(x=>x.service==='volume_set').length);
+ await page.getByRole('button',{name:'Skru op',exact:true}).click();await page.getByRole('button',{name:'Skru op',exact:true}).click();await page.getByRole('button',{name:'Skru ned',exact:true}).click();
+ await page.waitForFunction(n=>calls.filter(x=>x.service==='volume_set').length===n+3,volumeBefore);
+ assert.deepEqual(await page.evaluate(n=>calls.filter(x=>x.service==='volume_set').slice(n).map(x=>x.data.volume_level),volumeBefore),[.15,.2,.15]);
+ await page.evaluate(()=>{card._volumeTarget=null;testHass.states['media_player.stueetagen_ma'].attributes.volume_level=.98;card.hass={...testHass};});
+ await page.getByRole('button',{name:'Skru op',exact:true}).click();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='volume_set').at(-1).data.volume_level),1);
+ await page.evaluate(()=>{card._volumeTarget=null;testHass.states['media_player.stueetagen_ma'].attributes.volume_level=.02;card.hass={...testHass};});
+ await page.getByRole('button',{name:'Skru ned',exact:true}).click();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='volume_set').at(-1).data.volume_level),0);
+ await page.evaluate(()=>{card._volumeTarget=null;testHass.states['media_player.stueetagen_ma'].attributes.volume_level=.1;card.hass={...testHass};});
+
  assert(await page.evaluate(()=>calls.some(x=>x.service==='get_library'&&x.service_data.order_by==='timestamp_added_desc')));
- await page.getByRole('button',{name:'Favoritter',exact:true}).click();await page.getByRole('button',{name:'Alle favoritter',exact:true}).waitFor();
+ await page.locator('.favorite-section [data-favorites]').click();await page.getByRole('button',{name:'Alle favoritter',exact:true}).waitFor();
  assert(await page.evaluate(()=>calls.filter(x=>x.service==='get_library'&&x.service_data.limit===40).some(x=>x.service_data.favorite===true&&x.service_data.media_type==='album')));
  await page.getByRole('button',{name:'Album',exact:true}).click();await page.locator('.library-tools').waitFor();
  assert(await page.evaluate(()=>calls.filter(x=>x.service==='get_library'&&x.service_data.media_type==='album').at(-1).service_data.favorite===true));
