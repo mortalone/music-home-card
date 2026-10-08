@@ -1,4 +1,4 @@
-# Music Home 0.2.1
+# Music Home 0.2.2
 
 A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: the basic library/search/player requires no MA URL, token, new add-on or frontend build tools. The optional AI DJ and MA recommendation feeds use server-side HA REST commands.
 
@@ -44,11 +44,11 @@ Primary API references: [HA MA services](https://github.com/home-assistant/core/
 
 ## Manual installation
 
-Copy `music-home-card.js` to `/config/www/` and register `/local/music-home-card.js?v=0.2.1` as a JavaScript module. Use either the manual resource or the HACS resource, not both.
+Copy `music-home-card.js` to `/config/www/` and register `/local/music-home-card.js?v=0.2.2` as a JavaScript module. Use either the manual resource or the HACS resource, not both.
 
 ## Development
 
-`music-home-card.js` is the source and the deployable single-file card. Browser fixtures are in `tests/`. GitHub Actions checks syntax and runs the browser tests before publishing `v0.2.1`. Future card versions are released separately from Party Mode.
+`music-home-card.js` is the source and the deployable single-file card. Browser fixtures are in `tests/`. GitHub Actions checks syntax and runs the browser tests before publishing `v0.2.2`. Future card versions are released separately from Party Mode.
 
 ## AI DJ and Music Assistant recommendations (optional)
 

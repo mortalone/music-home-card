@@ -41,7 +41,7 @@ jobs:
       - name: Package card and install instructions
         run: |
           mkdir -p dist
-          zip -j dist/music-home-0.2.1.zip music-home-card.js dashboard.yaml README.md music_home_bridge.yaml secrets.example.yaml
+          zip -j dist/music-home-0.2.2.zip music-home-card.js dashboard.yaml README.md music_home_bridge.yaml secrets.example.yaml
       - uses: actions/upload-artifact@v4
         with:
           name: music-home-preview
@@ -52,8 +52,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG=v0.2.1
+          TAG=v0.2.2
           HEAD=$(gh api "repos/${{ github.repository }}/git/ref/heads/main" --jq '.object.sha')
           if [ "$HEAD" != "$GITHUB_SHA" ]; then exit 0; fi
           if gh release view "$TAG" >/dev/null 2>&1; then exit 0; fi
-          gh release create "$TAG" dist/music-home-0.2.1.zip music-home-card.js music_home_bridge.yaml secrets.example.yaml dist/qa/music-home-*.png --target "$GITHUB_SHA" --title "Music Home 0.2.1" --notes-file README.md
+          gh release create "$TAG" dist/music-home-0.2.2.zip music-home-card.js music_home_bridge.yaml secrets.example.yaml dist/qa/music-home-*.png --target "$GITHUB_SHA" --title "Music Home 0.2.2" --notes-file README.md
