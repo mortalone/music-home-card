@@ -1,0 +1,42 @@
+# Optional HA package. Copy to /config/packages/music_home_bridge.yaml.
+# AI DJ hostname below matches Jacob's add-on repository prefix; adjust for another installation.
+# Keep either the AI commands, the MA recommendation commands, or both.
+rest_command:
+  music_home_ai_suggest:
+    url: http://c2113ee7-party-ai-dj:8101/api/suggest
+    method: POST
+    headers:
+      Authorization: !secret music_home_ai_authorization
+    content_type: application/json
+    payload: '{{ {''prompt'': prompt, ''count'': count | default(12) | int} | to_json }}'
+    timeout: 15
+  music_home_ai_job:
+    url: http://c2113ee7-party-ai-dj:8101/api/jobs/{{ job_id | urlencode }}
+    method: GET
+    headers:
+      Authorization: !secret music_home_ai_authorization
+    timeout: 15
+  music_home_recommendations:
+    url: !secret music_home_ma_api_url
+    method: POST
+    headers:
+      Authorization: !secret music_home_ma_authorization
+    content_type: application/json
+    payload: '{"command": "music/recommendations", "args": {}}'
+    timeout: 30
+  music_home_recommendation_items:
+    url: !secret music_home_ma_api_url
+    method: POST
+    headers:
+      Authorization: !secret music_home_ma_authorization
+    content_type: application/json
+    payload: '{{ {''command'': ''music/recommendations/items'', ''args'': {''provider'': provider, ''item_id'': item_id}} | to_json }}'
+    timeout: 30
+  music_home_recent:
+    url: !secret music_home_ma_api_url
+    method: POST
+    headers:
+      Authorization: !secret music_home_ma_authorization
+    content_type: application/json
+    payload: '{"command": "music/recently_played_items", "args": {"limit": 30}}'
+    timeout: 30

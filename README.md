@@ -1,6 +1,6 @@
-# Music Home 0.1.0
+# Music Home 0.2.0
 
-A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: no MA URL, token, new add-on or frontend build tools are required.
+A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: the basic library/search/player requires no MA URL, token, new add-on or frontend build tools. The optional AI DJ and MA recommendation feeds use server-side HA REST commands.
 
 - Home: eight compact shortcuts plus cover rails for playlists, albums, favorite tracks and favorite radio stations.
 - Search: debounced global MA search across the connected providers, with covers and track rows.
@@ -44,8 +44,23 @@ Primary API references: [HA MA services](https://github.com/home-assistant/core/
 
 ## Manual installation
 
-Copy `music-home-card.js` to `/config/www/` and register `/local/music-home-card.js?v=0.1.0` as a JavaScript module. Use either the manual resource or the HACS resource, not both.
+Copy `music-home-card.js` to `/config/www/` and register `/local/music-home-card.js?v=0.2.0` as a JavaScript module. Use either the manual resource or the HACS resource, not both.
 
 ## Development
 
-`music-home-card.js` is the source and the deployable single-file card. Browser fixtures are in `tests/`. GitHub Actions checks syntax and runs the browser tests before publishing `v0.1.0`. Future card versions are released separately from Party Mode.
+`music-home-card.js` is the source and the deployable single-file card. Browser fixtures are in `tests/`. GitHub Actions checks syntax and runs the browser tests before publishing `v0.2.0`. Future card versions are released separately from Party Mode.
+
+## AI DJ and Music Assistant recommendations (optional)
+
+1. Copy `music_home_bridge.yaml` into `/config/packages/` (create the folder). If packages are not enabled, merge `packages: !include_dir_named packages` into the existing `homeassistant:` section in `configuration.yaml`. Do not create a second `homeassistant:` key. Alternatively merge the `rest_command:` entries into your existing configuration.
+2. Add the entries from `secrets.example.yaml` to `/config/secrets.yaml`. `music_home_ai_authorization` is `Bearer ` followed by Party AI DJ's **api_token**, not its Music Assistant token. The MA authorization entry uses an MA API token with library read permission. The hostname in the package is Jacob's internal add-on hostname; other installations must change it. This is an API URL, never an HA `/app/` ingress page. HA Core must be able to reach that address.
+3. Validate HA configuration and restart HA (or reload REST commands after the first installation). Remove the AI commands if you only want MA recommendations, or the recommendation commands if you only want AI. Neither feature requires the other.
+4. In the card editor enable **AI DJ-søgning**, or add `ai_dj: true` to the card YAML. The search page offers **Søg musik** and **AI DJ**. AI requires an explicit press on **Find med AI DJ** or Enter; typing does not generate requests. Results are matched by the existing AI DJ add-on and are only suggestions. Selecting or adding a track uses the card's chosen MA speaker. No AI queue change occurs automatically.
+
+The card calls HA's authenticated websocket connection; tokens remain in HA secrets. No browser CORS or local HTTP API access is needed, including on a remote HTTPS HA dashboard. The existing cover URL limitations still apply. AI needs the installed and configured Party AI DJ; no add-on update is required for this card release. Leaving the search page stops polling stale jobs; the already started server job may finish.
+
+Home adds recently added playlists/albums, favorite artists and a changing selection from favorite tracks using the MA library. With the optional MA bridge it also shows **Senest spillet** and up to eight real MA/provider recommendation rows (set `recommendation_rows: 1`–`16`). Titles/content come from MA and depend on provider support, history and permissions. Spotify's private app home feed is not reproduced or fabricated. A row can be absent or empty. Two recommendation requests run concurrently; results are cached for 60 seconds and refresh clears the cache. Cover rails show up to 20 items and **Se alle** shows up to 120 returned by that provider row.
+
+**Favoritter** on Home opens all favorite categories, including albums, artists, playlists, tracks, radio, podcasts and audiobooks. Each overview rail has **Vis alle**; category pages filter favorite=true and support pagination.
+
+The volume button at the top always shows the selected player's current percentage; tap it for a slider. The volume button beside the miniplayer opens the same control. Keep `height: 100dvh` for a kiosk with no HA header.
