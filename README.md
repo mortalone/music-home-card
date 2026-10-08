@@ -32,7 +32,7 @@ The HA **Music Assistant integration** must expose `music_assistant.get_library`
 
 ## Behavior and performance
 
-The player follows HA push updates. Library results are bounded, cached for 60 seconds and refreshed with the refresh button; there is no periodic background library polling. Covers load lazily, missing artwork falls back to a colored tile, and HA push updates do not replace the search field or interrupt scrolling. The full-screen panel has one vertical content scroll surface plus horizontal cover rails. No iframe, embedded MA application, animation loop or AI processing is used.
+The player follows HA push updates. Library results are bounded, cached for 60 seconds and refreshed with the refresh button; there is no periodic background library polling. Covers load lazily, missing artwork falls back to a colored tile, and HA push updates do not replace the search field or interrupt scrolling. The full-screen panel has one vertical content scroll surface plus horizontal cover rails. No iframe, embedded MA application or animation loop is used. Optional AI processing runs in the existing AI DJ add-on, not on the tablet.
 
 Cover URLs come from MA. On the local HTTP dashboard they can load directly; on a remote HTTPS dashboard, HTTP-only MA image URLs may be blocked as mixed content. A secure reachable MA image endpoint is required there. The miniplayer can use HA's own player image proxy.
 
