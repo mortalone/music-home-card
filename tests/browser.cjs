@@ -49,7 +49,7 @@ const assert=require('assert');const fs=require('fs');
  await page.getByRole('searchbox').fill('rolig jazz');await page.waitForTimeout(650);assert.equal(await page.evaluate(()=>aiJobs),aiBefore);
  await page.getByRole('button',{name:'Find med AI DJ',exact:true}).click();await page.getByText('Rolig jazz med AI',{exact:true}).waitFor();
  assert.equal(await page.evaluate(()=>aiJobs),aiBefore+1);assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='play_media').length),playBefore);
- assert.equal(await page.locator('.search-results img').getAttribute('src'),'https://example.com/cover.jpg');
+ assert.equal(await page.locator('.search-results img').getAttribute('src'),'http://127.0.0.1:18104/cover/8');
  await page.locator('.search-results [data-add]').click();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='play_media').at(-1).service_data.enqueue),'add');
  await page.screenshot({path:'dist/qa/music-home-ai.png'});
  await page.evaluate(()=>bridgeError=true);await page.getByRole('searchbox').fill('fejl');await page.getByRole('searchbox').press('Enter');await page.getByText('Adgang afvist. Kontrollér tokenet i HA secrets.',{exact:true}).waitFor();

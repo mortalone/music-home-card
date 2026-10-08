@@ -10,7 +10,7 @@ window.testHass={services:{rest_command:Object.fromEntries(['music_home_ai_sugge
   const d=msg.service_data;if(msg.domain==='rest_command'){
    if(bridgeError)return {response:{status:401,content:{error:'Adgang afvist'}}};let content;
    if(msg.service==='music_home_ai_suggest'){aiJobs++;content={id:'ai-fixture'};}
-   else if(msg.service==='music_home_ai_job')content={state:'ready',tracks:[{...item('track','Rolig jazz med AI',1),image:null,metadata:{images:[{path:'/bad-local-image'},{path:'https://example.com/cover.jpg'}]}}]};
+   else if(msg.service==='music_home_ai_job')content={state:'ready',tracks:[{...item('track','Rolig jazz med AI',1),image:null,metadata:{images:[{path:'/bad-local-image'},{path:'http://127.0.0.1:18104/cover/8'}]}}]};
    else if(msg.service==='music_home_recommendations')content=[{item_id:'personal',provider:'recommendations',name:'Mere af det, du synes godt om',enabled_by_default:true},{item_id:'hits',provider:'spotify',name:'Hits til Musik i huset',enabled_by_default:true}];
    else if(msg.service==='music_home_recommendation_items')content=Array.from({length:25},(_,i)=>item('track','Forslag '+i,i));
    else if(msg.service==='music_home_recent')content=[item('track','Spillet i går',9)];
