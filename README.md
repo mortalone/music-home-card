@@ -77,9 +77,12 @@ show_header_name: false
 show_header_volume: true
 show_header_refresh: false
 header_clock: true
+header_clock_size: 28
 header_entity_1: sensor.citroen_batteri
 header_entity_2: person.dicte
 header_action_2: script.kald_pa_dicte
 ```
 
 Entitets-ID'er er eksempler; vælg dine egne i editoren. Avanceret YAML kan i stedet bruge `header_entities` med op til fire strenge eller objekter (`entity`, `action_entity`, `name`, `icon`, `show_name`, `show_state`). Fjern `header_entities`, hvis du vil bruge editorens fire pladser. Visningen er lokal for kortet og uafhængig af Kiosk-overlayet.
+
+Urets skriftstørrelse kan vælges i kortets visuelle editor med **Ur: skriftstørrelse** (12–64 px). Standard er 18 px; prøv 28–32 px til et større ur. Topbjælken tilpasser højden og ombryder, hvis der mangler plads.
