@@ -64,3 +64,22 @@ Home adds recently added playlists/albums, favorite artists and a changing selec
 **Dine favoritter** is always a Home section with **Vis alle**, independent of the top button. The filter icon beside **Favoritter** clarifies that it opens a view restricted to favorites. **Favoritter** on Home opens all favorite categories, including albums, artists, playlists, tracks, radio, podcasts and audiobooks. Each overview rail has **Vis alle**; category pages filter favorite=true and support pagination.
 
 At the top, **− · percentage · +** changes volume in steps of five percentage points, bounded to 0–100%. Quick successive presses accumulate and their HA calls are serialized. The speaker button beside the miniplayer opens the slider. Keep `height: 100dvh` for a kiosk with no HA header.
+
+## Valgfri topbjælke (0.2.3)
+
+Korteditoren har separate valg for profil/logo, navn, volumen, refresh og ur samt fire entiteter med valgfri handlingsentitet. Entiteterne følger HA-opdateringer; uret opdateres ved minutskift uden at hente musik igen. Toppen ombrydes på smalle skærme.
+
+Sensorer/personer åbner Mere info. Scripts og scener aktiveres, knapper trykkes, switches/input_booleans/lys/fans toggles, automations trigges. En handlingsentitet kan eksempelvis være et kald-på-script, mens personen leverer billede og status.
+
+```yaml
+show_header_logo: false
+show_header_name: false
+show_header_volume: true
+show_header_refresh: false
+header_clock: true
+header_entity_1: sensor.citroen_batteri
+header_entity_2: person.dicte
+header_action_2: script.kald_pa_dicte
+```
+
+Entitets-ID'er er eksempler; vælg dine egne i editoren. Avanceret YAML kan i stedet bruge `header_entities` med op til fire strenge eller objekter (`entity`, `action_entity`, `name`, `icon`, `show_name`, `show_state`). Fjern `header_entities`, hvis du vil bruge editorens fire pladser. Visningen er lokal for kortet og uafhængig af Kiosk-overlayet.
