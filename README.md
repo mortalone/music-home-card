@@ -89,3 +89,5 @@ Entitets-ID'er er eksempler; vælg dine egne i editoren. Avanceret YAML kan i st
 Urets skriftstørrelse kan vælges i kortets visuelle editor med **Ur: skriftstørrelse** (12–64 px). Standard er 18 px; prøv 28–32 px til et større ur. Topbjælken tilpasser højden og ombryder, hvis der mangler plads.
 
 **Ur: placering** vælger mellem ved entiteterne (standard), venstre side og højre side/hjørne. Uret følger topbjælkens indvendige kant og ombrydes sammen med kontrollerne på smalle skærme. YAML: `header_clock_position: inline`, `left` eller `right`.
+
+Højttalerknappen i miniafspilleren åbner volumenslideren lige over afspilleren. Tryk igen for at lukke. Volumenknapperne i toppen fungerer fortsat separat.
