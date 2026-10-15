@@ -91,3 +91,5 @@ Urets skriftstørrelse kan vælges i kortets visuelle editor med **Ur: skriftst�
 **Ur: placering** vælger mellem ved entiteterne (standard), venstre side og højre side/hjørne. Uret følger topbjælkens indvendige kant og ombrydes sammen med kontrollerne på smalle skærme. YAML: `header_clock_position: inline`, `left` eller `right`.
 
 Højttalerknappen i miniafspilleren åbner volumenslideren lige over afspilleren. Tryk igen for at lukke. Volumenknapperne i toppen fungerer fortsat separat.
+
+Miniafspilleren har nu en **Tilfældig rækkefølge**-knap (shuffle), som lyser grønt, når MA-afspilleren melder funktionen aktiv. Knappen vises, når afspilleren understøtter shuffle. På smalle skærme flytter kontrollerne til en ekstra linje, så titel og knapper fortsat har plads.
