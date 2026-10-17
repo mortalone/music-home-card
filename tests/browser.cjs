@@ -37,6 +37,17 @@ const assert=require('assert');const fs=require('fs');
  await page.screenshot({path:'dist/qa/music-home-shuffle.png'});
  await page.evaluate(()=>{const a=testHass.states['media_player.stueetagen_ma'].attributes;delete a.shuffle;a.supported_features=0;card.hass={...testHass};});assert.equal(await page.getByRole('button',{name:'Tilfældig rækkefølge',exact:true}).count(),0);
  await page.evaluate(()=>{testHass.states['media_player.stueetagen_ma'].attributes.shuffle=false;card.hass={...testHass};});
+ // Repeat all toggles independently of shuffle and follows external state.
+ const repeatButton=page.getByRole('button',{name:'Gentag hele køen',exact:true});
+ assert.equal(await repeatButton.getAttribute('aria-pressed'),'false');
+ await repeatButton.click();assert.deepEqual(await page.evaluate(()=>calls.filter(x=>x.service==='repeat_set').at(-1)),{domain:'media_player',service:'repeat_set',data:{entity_id:'media_player.stueetagen_ma',repeat:'all'}});
+ await page.evaluate(()=>{testHass.states['media_player.stueetagen_ma'].attributes.repeat='all';card.hass={...testHass};});assert.equal(await repeatButton.getAttribute('aria-pressed'),'true');
+ await repeatButton.click();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='repeat_set').at(-1).data.repeat),'off');
+ await page.evaluate(()=>{testHass.states['media_player.stueetagen_ma'].attributes.repeat='one';card.hass={...testHass};});assert.equal(await repeatButton.locator('small').textContent(),'1');await repeatButton.click();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='repeat_set').at(-1).data.repeat),'all');
+ await page.evaluate(()=>{testHass.states['media_player.stueetagen_ma'].attributes.repeat='all';card.hass={...testHass};});
+ for(const width of [320,360,720,1280]){await page.setViewportSize({width,height:800});assert(await page.locator('.player').evaluate(el=>el.scrollWidth<=el.clientWidth),'Repeat controls fit '+width);}
+ await page.screenshot({path:'dist/qa/music-home-repeat.png'});
+ await page.evaluate(()=>{delete testHass.states['media_player.stueetagen_ma'].attributes.repeat;card.hass={...testHass};});assert.equal(await repeatButton.count(),0);
  // Reconfiguration must not register another click handler or leave the player blank.
  await page.evaluate(()=>card.setConfig({entity:'media_player.stueetagen_ma',name:'Musik igen'}));await page.getByText('Dine playlister',{exact:true}).waitFor();assert.equal(await page.locator('.player strong').textContent(),'Maison');
  const before=await page.evaluate(()=>calls.filter(x=>x.service==='media_next_track').length);await page.getByRole('button',{name:'Næste nummer'}).click();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='media_next_track').length),before+1);
