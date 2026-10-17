@@ -21,3 +21,13 @@ for name,command in commands.items():
  assert command['timeout']<=30
 assert 'api_token' not in Path('music-home-card.js').read_text()
 print('HA package YAML, secret references and JSON payload templates passed.')
+
+env.filters['bool']=bool
+for suffix,command,data,args in [
+ ('config','config/player_queues/get',{'queue_id':'group-1'},{'queue_id':'group-1'}),
+ ('save','config/player_queues/save',{'queue_id':'group-1','values':{'autoplay_mode':'playlist','autoplay_playlist':'library://playlist/4'}},{'queue_id':'group-1','values':{'autoplay_mode':'playlist','autoplay_playlist':'library://playlist/4'}}),
+ ('autoplay','player_queues/autoplay',{'queue_id':'group-1','enabled':False},{'queue_id':'group-1','autoplay_enabled':False}),
+]:
+ payload=json.loads(env.from_string(commands['music_home_queue_'+suffix]['payload']).render(**data))
+ assert payload=={'command':command,'args':args}
+print('Autoplay queue-scoped payloads and false boolean passed.')

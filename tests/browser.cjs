@@ -48,6 +48,30 @@ const assert=require('assert');const fs=require('fs');
  for(const width of [320,360,720,1280]){await page.setViewportSize({width,height:800});assert(await page.locator('.player').evaluate(el=>el.scrollWidth<=el.clientWidth),'Repeat controls fit '+width);}
  await page.screenshot({path:'dist/qa/music-home-repeat.png'});
  await page.evaluate(()=>{delete testHass.states['media_player.stueetagen_ma'].attributes.repeat;card.hass={...testHass};});assert.equal(await repeatButton.count(),0);
+ // Autoplay reads MA state, writes only the active queue, and does not start playback.
+ const playbackBefore=await page.evaluate(()=>calls.filter(x=>x.service==='play_media').length);
+ await page.getByRole('button',{name:'Fortsæt musikken',exact:true}).click();await page.getByRole('combobox',{name:'Fortsæt med',exact:true}).waitFor();
+ assert.equal(await page.getByRole('combobox',{name:'Fortsæt med',exact:true}).inputValue(),'off');
+ for(const mode of ['auto','similar','library','playlist']){
+   await page.getByRole('combobox',{name:'Fortsæt med',exact:true}).selectOption(mode);
+   if(mode==='playlist')await page.getByRole('combobox',{name:'Autoplay-playliste'}).selectOption('library://playlist/4');
+   await page.getByRole('button',{name:'Gem musikvalg'}).click();await page.getByText('Gemt og genlæst fra MA.',{exact:true}).waitFor();
+   assert.equal(await page.getByRole('combobox',{name:'Fortsæt med',exact:true}).inputValue(),mode);
+   assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='music_home_queue_save').at(-1).service_data.queue_id),'group-fixture');
+ }
+ assert.equal(await page.evaluate(()=>queueConfig.values.autoplay_playlist.value),'library://playlist/4');
+ for(const width of [320,360,720,1280]){await page.setViewportSize({width,height:800});assert(await page.locator('.player').evaluate(el=>el.scrollWidth<=el.clientWidth),'Autoplay button fits '+width);assert(await page.locator('.autoplay-panel').evaluate(el=>el.scrollWidth<=el.clientWidth),'Menu fits '+width);}
+ await page.screenshot({path:'dist/qa/music-home-autoplay.png'});
+ await page.getByRole('combobox',{name:'Fortsæt med',exact:true}).selectOption('off');await page.getByRole('button',{name:'Gem musikvalg'}).click();await page.getByText('Gemt og genlæst fra MA.',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>queue.autoplay_enabled),false);
+ await page.getByRole('button',{name:'Luk musikvalg'}).click();
+ await page.evaluate(()=>{queue.autoplay_enabled=true;queue.repeat_mode='all';queueConfig.values.autoplay_mode.value='library';});
+ await page.getByRole('button',{name:'Fortsæt musikken',exact:true}).click();await page.getByRole('combobox',{name:'Fortsæt med',exact:true}).waitFor();assert.equal(await page.getByRole('combobox',{name:'Fortsæt med',exact:true}).inputValue(),'library');assert(await page.locator('[data-autoplay-repeat]').isVisible());
+ await page.getByRole('button',{name:'Gem musikvalg'}).click();await page.getByText('Gemt og genlæst fra MA.',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='repeat_set').at(-1).data.repeat),'off');
+ const mutations=await page.evaluate(()=>calls.filter(x=>x.service==='music_home_queue_save').length);
+ await page.evaluate(()=>queue.queue_id='changed-group');await page.getByRole('button',{name:'Gem musikvalg'}).click();await page.getByText('Afspillerens kø er ændret. Luk menuen og åbn den igen.',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='music_home_queue_save').length),mutations);
+ await page.getByRole('button',{name:'Luk musikvalg'}).click();await page.evaluate(()=>{bridgeError=true;});await page.getByRole('button',{name:'Fortsæt musikken',exact:true}).click();await page.locator('.autoplay-panel .error').waitFor();await page.getByRole('button',{name:'Luk musikvalg'}).click();await page.evaluate(()=>{bridgeError=false;delete testHass.services.rest_command.music_home_queue_config;});
+ await page.getByRole('button',{name:'Fortsæt musikken',exact:true}).click();await page.getByText('Opdatér music_home_bridge.yaml i HA for at bruge Autoplay.',{exact:false}).waitFor();await page.getByRole('button',{name:'Luk musikvalg'}).click();await page.evaluate(()=>testHass.services.rest_command.music_home_queue_config={});
+ assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='play_media').length),playbackBefore,'Autoplay must never start or replace playback');
  // Reconfiguration must not register another click handler or leave the player blank.
  await page.evaluate(()=>card.setConfig({entity:'media_player.stueetagen_ma',name:'Musik igen'}));await page.getByText('Dine playlister',{exact:true}).waitFor();assert.equal(await page.locator('.player strong').textContent(),'Maison');
  const before=await page.evaluate(()=>calls.filter(x=>x.service==='media_next_track').length);await page.getByRole('button',{name:'Næste nummer'}).click();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='media_next_track').length),before+1);

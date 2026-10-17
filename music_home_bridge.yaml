@@ -40,3 +40,27 @@ rest_command:
     content_type: application/json
     payload: '{"command": "music/recently_played_items", "args": {"limit": 30}}'
     timeout: 30
+  music_home_queue_config:
+    url: !secret music_home_ma_api_url
+    method: POST
+    headers:
+      Authorization: !secret music_home_ma_authorization
+    content_type: application/json
+    payload: '{{ {''command'': ''config/player_queues/get'', ''args'': {''queue_id'': queue_id}} | to_json }}'
+    timeout: 15
+  music_home_queue_save:
+    url: !secret music_home_ma_api_url
+    method: POST
+    headers:
+      Authorization: !secret music_home_ma_authorization
+    content_type: application/json
+    payload: '{{ {''command'': ''config/player_queues/save'', ''args'': {''queue_id'': queue_id, ''values'': values}} | to_json }}'
+    timeout: 15
+  music_home_queue_autoplay:
+    url: !secret music_home_ma_api_url
+    method: POST
+    headers:
+      Authorization: !secret music_home_ma_authorization
+    content_type: application/json
+    payload: '{{ {''command'': ''player_queues/autoplay'', ''args'': {''queue_id'': queue_id, ''autoplay_enabled'': enabled | bool}} | to_json }}'
+    timeout: 15
