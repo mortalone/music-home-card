@@ -1,6 +1,6 @@
-/* Music Home 0.2.9 — MIT; uses the signed-in Home Assistant connection. */
+/* Music Home 0.2.10 — MIT; uses the signed-in Home Assistant connection. */
 (() => {
-  const VERSION = '0.2.9';
+  const VERSION = '0.2.10';
   const LABELS = {playlist:'Playlister',album:'Album',artist:'Kunstnere',track:'Favoritnumre',radio:'Radio',podcast:'Podcasts',audiobook:'Lydbøger'};
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const url = value => { if(typeof value!=='string'||!value.trim())return ''; try { const u=new URL(value,location.href); return ['http:','https:'].includes(u.protocol)?u.href:''; } catch { return ''; } };
@@ -31,11 +31,11 @@
 
     _hasBridge(name){return !!this._hass?.services?.rest_command?.[name];}
     async _bridge(name,data={}){const cacheable=!name.startsWith('music_home_ai_')&&!name.startsWith('music_home_queue_'),key=JSON.stringify(['bridge',name,data]),cached=this._cache.get(key);if(cacheable&&cached&&Date.now()-cached.at<60000)return cached.items;const r=await this._hass.callWS({type:'call_service',domain:'rest_command',service:name,service_data:data,return_response:true});const response=r.response??{};let content=response.content;if(typeof content==='string'){try{content=JSON.parse(content);}catch{throw Error('Forbindelsen svarede ikke med musikdata. Kontrollér HA-opsætningen.');}}if(response.status<200||response.status>=300||!response.status||content?.error||content?.error_code)throw Error(response.status===401||response.status===403?'Adgang afvist. Kontrollér tokenet i HA secrets.':String(content?.error??content?.details??'Musikforbindelsen svarede med en fejl.'));if(cacheable)this._cache.set(key,{at:Date.now(),items:content});return content;}
-    async _queueFor(entity){const r=await this._service('get_queue',{entity_id:entity},true),q=r?.[entity];if(!q?.queue_id)throw Error('MA kunne ikke finde en aktiv kø for denne afspiller.');return q;}
+    async _queueFor(entity){const r=await this._service('get_queue',{entity_id:entity},true),q=r?.[entity];if(!q?.queue_id)throw Error('MA kunne ikke finde en aktiv kø for denne afspiller.');const full=await this._bridge('music_home_queue_state',{queue_id:q.queue_id});if(full?.queue_id!==q.queue_id)throw Error('MA-forbindelsen peger ikke på denne afspillers kø.');return full;}
     async _openAutoplay(){const panel=this.shadowRoot.querySelector('.autoplay-panel');panel.hidden=false;this.shadowRoot.querySelector('.volume').hidden=true;const session=this._autoplaySession=(this._autoplaySession??0)+1,entity=this._config.entity;
       const head='<div class="panel-head"><strong>Fortsæt musikken</strong><button class="icon" data-action="autoplay-close" aria-label="Luk musikvalg">×</button></div>';
       panel.innerHTML=head+'<p>Henter indstillinger fra MA…</p>';
-      try{if(!['music_home_queue_config','music_home_queue_save','music_home_queue_autoplay'].every(x=>this._hasBridge(x)))throw Error('Opdatér music_home_bridge.yaml i HA for at bruge Autoplay. Brug samme MA-adresse og token som til anbefalingerne.');
+      try{if(!['music_home_queue_state','music_home_queue_config','music_home_queue_save','music_home_queue_autoplay'].every(x=>this._hasBridge(x)))throw Error('Opdatér music_home_bridge.yaml i HA for at bruge Autoplay. Brug samme MA-adresse og token som til anbefalingerne.');
         const q=await this._queueFor(entity),config=await this._bridge('music_home_queue_config',{queue_id:q.queue_id});if(session!==this._autoplaySession||entity!==this._config.entity||!this.isConnected)return;
         const values=config?.values,entry=values?.autoplay_mode;if(!entry||typeof q.autoplay_enabled!=='boolean')throw Error('Denne MA-version tilbyder ikke de nødvendige Autoplay-indstillinger.');
         this._autoplayContext={entity,queue:q.queue_id,session};this._autoplayRepeat=['all','one'].includes(q.repeat_mode);const current=q.autoplay_enabled?(entry.value??entry.default_value??'auto'):'off';

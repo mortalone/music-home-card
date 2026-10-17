@@ -24,6 +24,7 @@ print('HA package YAML, secret references and JSON payload templates passed.')
 
 env.filters['bool']=bool
 for suffix,command,data,args in [
+ ('state','player_queues/get',{'queue_id':'group-1'},{'queue_id':'group-1'}),
  ('config','config/player_queues/get',{'queue_id':'group-1'},{'queue_id':'group-1'}),
  ('save','config/player_queues/save',{'queue_id':'group-1','values':{'autoplay_mode':'playlist','autoplay_playlist':'library://playlist/4'}},{'queue_id':'group-1','values':{'autoplay_mode':'playlist','autoplay_playlist':'library://playlist/4'}}),
  ('autoplay','player_queues/autoplay',{'queue_id':'group-1','enabled':False},{'queue_id':'group-1','autoplay_enabled':False}),

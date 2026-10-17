@@ -64,3 +64,11 @@ rest_command:
     content_type: application/json
     payload: '{{ {''command'': ''player_queues/autoplay'', ''args'': {''queue_id'': queue_id, ''autoplay_enabled'': enabled | bool}} | to_json }}'
     timeout: 15
+  music_home_queue_state:
+    url: !secret music_home_ma_api_url
+    method: POST
+    headers:
+      Authorization: !secret music_home_ma_authorization
+    content_type: application/json
+    payload: '{{ {''command'': ''player_queues/get'', ''args'': {''queue_id'': queue_id}} | to_json }}'
+    timeout: 15
