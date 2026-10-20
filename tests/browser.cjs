@@ -4,6 +4,15 @@ const assert=require('assert');const fs=require('fs');
 (async()=>{const server=spawn('python3',['tests/fixture.py'],{stdio:'inherit'});let browser,page;try{
  for(let i=0;i<40;i++){try{if((await fetch('http://127.0.0.1:18104/')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});page=await browser.newPage({viewport:{width:720,height:1280}});const errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.goto('http://127.0.0.1:18104/');await page.getByText('Dine playlister',{exact:true}).waitFor();
+ // Opening either cover or title shows the queue without changing playback.
+ await page.locator('.player-now .cover').click();await page.getByText('Kønummer 2',{exact:true}).waitFor();
+ assert.equal(await page.locator('.queue-current').count(),1);assert.equal(await page.locator('main .row').count(),50);
+ assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='play_media').length),0);
+ await page.getByRole('button',{name:'Næste 50'}).click();await page.getByText('Kønummer 64',{exact:true}).waitFor();assert.equal(await page.locator('main .row').count(),15);
+ await page.locator('.player-now strong').click();await page.getByText('Kønummer 2',{exact:true}).waitFor();
+ for(const width of [320,720,1280]){await page.setViewportSize({width,height:800});assert(await page.locator('.player').evaluate(el=>el.scrollWidth<=el.clientWidth),'Queue trigger fits '+width);}
+ await page.setViewportSize({width:720,height:1280});
+ await page.getByRole('button',{name:'Tilbage',exact:true}).click();await page.getByText('Dine playlister',{exact:true}).waitFor();
  assert.equal(await page.locator('.shortcut').count(),8);assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='play_media').length),0,'Never auto-play');
  assert.equal(await page.locator('.volume').isVisible(),false);assert.equal(await page.locator('.app-link').getAttribute('href'),'app://com.spotify.music');
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'No page horizontal overflow');
