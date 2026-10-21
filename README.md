@@ -1,4 +1,4 @@
-# Music Home 0.2.12
+# Music Home 0.2.13
 
 A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: the basic library/search/player requires no MA URL, token, new add-on or frontend build tools. The optional AI DJ and MA recommendation feeds use server-side HA REST commands.
 
@@ -44,11 +44,11 @@ Primary API references: [HA MA services](https://github.com/home-assistant/core/
 
 ## Manual installation
 
-Copy `music-home-card.js` to `/config/www/` and register `/local/music-home-card.js?v=0.2.12` as a JavaScript module. Use either the manual resource or the HACS resource, not both.
+Copy `music-home-card.js` to `/config/www/` and register `/local/music-home-card.js?v=0.2.13` as a JavaScript module. Use either the manual resource or the HACS resource, not both.
 
 ## Development
 
-`music-home-card.js` is the source and the deployable single-file card. Browser fixtures are in `tests/`. GitHub Actions checks syntax and runs the browser tests before publishing `v0.2.12`. Future card versions are released separately from Party Mode.
+`music-home-card.js` is the source and the deployable single-file card. Browser fixtures are in `tests/`. GitHub Actions checks syntax and runs the browser tests before publishing `v0.2.13`. Future card versions are released separately from Party Mode.
 
 ## AI DJ and Music Assistant recommendations (optional)
 
@@ -98,16 +98,19 @@ Miniafspilleren har nu en **Tilfældig rækkefølge**-knap (shuffle), som lyser 
 
 Miniafspilleren har en kompakt **Gentag hele køen**-knap ved siden af shuffle. Tryk skifter mellem gentag hele køen og fra. Grøn markering følger afspillerens bekræftede HA-status. Shuffle og gentagelse kan bruges samtidig. Knappen vises kun, når afspilleren melder repeat-understøttelse. Hvis gentag ét nummer er valgt andetsteds, viser knappen et lille 1; tryk skifter til hele køen. På smalle skærme ombrydes kontrollerne automatisk.
 
-## Fortsæt musikken (0.2.12)
+## Fortsæt musikken (0.2.13)
 
 ∞ ved afspilleren åbner MA Autoplay: Fra, Automatisk, Lignende musik, Uendeligt biblioteksmix eller Valgt playliste. MA's egne playlistevalg indlæses i menuen. Indstillingerne gemmes for den aktive kø; eksisterende musik bliver ikke erstattet eller startet. Menuen læser friske værdier hver gang den åbnes og efter Gem. Ingen baggrundspolling. Ved aktiv repeat vises et valg om at slå repeat fra, så køen kan løbe ud og Autoplay tage over. Shuffle kan fortsat bruges.
 
 **Opsætning:** Opdatér også `/config/packages/music_home_bridge.yaml` fra denne release og genindlæs RESTful commands i HA (eller genstart HA). Bevar dine eksisterende MA secrets. Hvis AI DJ ikke bruges, kan `music_home_ai_suggest` og `music_home_ai_job` udelades. Ingen ny add-on kræves. MA-tokenet skal have adgang til køstyring samt læse/skrive afspillerindstillinger. API-kontrakten er kontrolleret mod MA 2.10.6; ældre versioner kan mangle valgene. Ved flere MA-servere skal forbindelsesfilen pege på samme server som kortets afspiller.
 
-## Afspilningskø (0.2.12)
+## Afspilningskø (0.2.13)
 Tryk på coveret eller titlen i bundafspilleren for at se den aktive MA-kø. Det aktuelle nummer markeres. Lange køer vises i sider med 50 numre og åbner på siden med det aktuelle nummer. Opdater-knappen henter køen igen; der køres ingen baggrundspolling. Visningen ændrer ikke afspilningen.
 
 Tilføj den nye `music_home_queue_items`-blok fra `music_home_bridge.yaml` under din eksisterende `rest_command:`. Behold dine øvrige indstillinger og secrets; AI DJ er ikke nødvendig. Genindlæs REST-kommandoer eller genstart HA efter ændringen.
 
-## Kompakt afspiller (0.2.12)
+## Kompakt afspiller (0.2.13)
 Shuffle, repeat og automatisk fortsættelse er samlet under Afspilningsvalg ved transportknapperne. Shuffle og repeat virker også uden Autoplay-bridge. Hjem/Søg/Bibliotek fylder mindre med mindst 44 px trykflader. Bundlinjen følger kortets egen bredde og deler sig over flere rækker ved smalle kort. Ingen ændring af bridge eller secrets nødvendig fra 0.2.11.
+
+## HA-handlinger i kiosk (0.2.13)
+Autoplay og køvisning kalder nu HA direkte i stedet for at kræve, at handlingerne findes i frontendens lokale liste. Det undgår en falsk besked om manglende bridge ved ufuldstændige eller gamle handlingslister. En handling, som reelt mangler i HA, vises med sit præcise navn. Ingen ændring af YAML eller tokens.

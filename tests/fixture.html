@@ -9,6 +9,7 @@ window.testHass={services:{rest_command:Object.fromEntries(['music_home_queue_it
   if(msg.type==='media_player/browse_media')return {children:['Maison','Aftenlys','En stemme'].map((name,i)=>({title:name,media_content_id:`library://track/${i}`,media_content_type:'track',thumbnail:`/cover/${i+8}`,can_play:true,can_expand:false}))};
   if(msg.type!=='call_service')throw Error('Unknown websocket request');
   const d=msg.service_data;if(msg.domain==='rest_command'){
+   if(window.missingBridge===msg.service)throw {code:'service_not_found',message:'Service not found'};
    if(bridgeError)return {response:{status:401,content:{error:'Adgang afvist'}}};let content;
    if(msg.service==='music_home_queue_state')content=JSON.parse(JSON.stringify(queue));
    else if(msg.service==='music_home_queue_items')content=Array.from({length:65},(_,i)=>({queue_item_id:'q'+i,name:'Kønummer '+i,media_item:item('track','Kønummer '+i,i%12)})).slice(d.offset,d.offset+d.limit);

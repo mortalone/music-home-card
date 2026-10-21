@@ -1,6 +1,6 @@
-/* Music Home 0.2.12 — MIT; uses the signed-in Home Assistant connection. */
+/* Music Home 0.2.13 — MIT; uses the signed-in Home Assistant connection. */
 (() => {
-  const VERSION = '0.2.12';
+  const VERSION = '0.2.13';
   const LABELS = {playlist:'Playlister',album:'Album',artist:'Kunstnere',track:'Favoritnumre',radio:'Radio',podcast:'Podcasts',audiobook:'Lydbøger'};
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const url = value => { if(typeof value!=='string'||!value.trim())return ''; try { const u=new URL(value,location.href); return ['http:','https:'].includes(u.protocol)?u.href:''; } catch { return ''; } };
@@ -33,7 +33,7 @@
     async _library(type,extra={}){const entry=await this._configEntry();const key=JSON.stringify([entry,type,extra]);const cached=this._cache.get(key);if(cached&&Date.now()-cached.at<60000)return cached.items;const r=await this._service('get_library',{config_entry_id:entry,media_type:type,limit:20,...extra},true);if(!Array.isArray(r?.items))throw Error('MA returnerede ikke et bibliotek. Kontrollér at HA har Music Assistant → Get library.');const items=r.items.map(itemOf).filter(x=>x.uri);this._cache.set(key,{at:Date.now(),items});return items;}
 
     _hasBridge(name){return !!this._hass?.services?.rest_command?.[name];}
-    async _bridge(name,data={}){const cacheable=!name.startsWith('music_home_ai_')&&!name.startsWith('music_home_queue_'),key=JSON.stringify(['bridge',name,data]),cached=this._cache.get(key);if(cacheable&&cached&&Date.now()-cached.at<60000)return cached.items;const r=await this._hass.callWS({type:'call_service',domain:'rest_command',service:name,service_data:data,return_response:true});const response=r.response??{};let content=response.content;if(typeof content==='string'){try{content=JSON.parse(content);}catch{throw Error('Forbindelsen svarede ikke med musikdata. Kontrollér HA-opsætningen.');}}if(response.status<200||response.status>=300||!response.status||content?.error||content?.error_code)throw Error(response.status===401||response.status===403?'Adgang afvist. Kontrollér tokenet i HA secrets.':String(content?.error??content?.details??'Musikforbindelsen svarede med en fejl.'));if(cacheable)this._cache.set(key,{at:Date.now(),items:content});return content;}
+    async _bridge(name,data={}){const cacheable=!name.startsWith('music_home_ai_')&&!name.startsWith('music_home_queue_'),key=JSON.stringify(['bridge',name,data]),cached=this._cache.get(key);if(cacheable&&cached&&Date.now()-cached.at<60000)return cached.items;let r;try{r=await this._hass.callWS({type:'call_service',domain:'rest_command',service:name,service_data:data,return_response:true});}catch(e){if(e?.code==='service_not_found'||/service.*not found|action.*not found/i.test(e?.message??''))throw Error('HA mangler handlingen rest_command.'+name+'. Kontrollér at bridge-filen er indlæst.');throw e;}const response=r.response??{};let content=response.content;if(typeof content==='string'){try{content=JSON.parse(content);}catch{throw Error('Forbindelsen svarede ikke med musikdata. Kontrollér HA-opsætningen.');}}if(response.status<200||response.status>=300||!response.status||content?.error||content?.error_code)throw Error(response.status===401||response.status===403?'Adgang afvist. Kontrollér tokenet i HA secrets.':String(content?.error??content?.details??'Musikforbindelsen svarede med en fejl.'));if(cacheable)this._cache.set(key,{at:Date.now(),items:content});return content;}
     async _openQueue(offset=null){
       const entity=this._config.entity,seq=++this._seq;this._request++;clearTimeout(this._searchTimer);this._detail=null;
       this._autoplaySession=(this._autoplaySession??0)+1;this.shadowRoot.querySelector('.autoplay-panel').hidden=true;this.shadowRoot.querySelector('.volume').hidden=true;
@@ -41,7 +41,6 @@
       const head=`<div class="section-head"><button class="icon" data-action="back" aria-label="Tilbage">${icon('back')}</button><h2>Afspilningskø</h2><button class="icon" data-action="queue" aria-label="Opdater kø">${icon('refresh')}</button></div>`;
       main.innerHTML=head+'<p class="notice">Henter den aktuelle kø…</p>';
       try{
-        if(!this._hasBridge('music_home_queue_items'))throw Error('Tilføj music_home_queue_items fra den nye bridge-fil i HA for at vise køen.');
         const q=await this._queueFor(entity);if(seq!==this._seq||entity!==this._config.entity||!this.isConnected)return;
         const start=offset===null?Math.floor(Math.max(0,q.current_index??0)/50)*50:Math.max(0,offset);
         const items=await this._bridge('music_home_queue_items',{queue_id:q.queue_id,offset:start,limit:50});
@@ -56,7 +55,7 @@
     async _openAutoplay(){const panel=this.shadowRoot.querySelector('.autoplay-panel');panel.hidden=false;this.shadowRoot.querySelector('.volume').hidden=true;const session=this._autoplaySession=(this._autoplaySession??0)+1,entity=this._config.entity;
       const head='<div class="panel-head"><strong>Afspilningsvalg</strong><button class="icon" data-action="autoplay-close" aria-label="Luk musikvalg">×</button></div><div class="mode-toggles">'+this._modeButtons()+'</div><h3>Automatisk fortsættelse</h3>';
       panel.innerHTML=head+'<p>Henter indstillinger fra MA…</p>';
-      try{if(!['music_home_queue_state','music_home_queue_config','music_home_queue_save','music_home_queue_autoplay'].every(x=>this._hasBridge(x)))throw Error('Opdatér music_home_bridge.yaml i HA for at bruge Autoplay. Brug samme MA-adresse og token som til anbefalingerne.');
+      try{
         const q=await this._queueFor(entity),config=await this._bridge('music_home_queue_config',{queue_id:q.queue_id});if(session!==this._autoplaySession||entity!==this._config.entity||!this.isConnected)return;
         const values=config?.values,entry=values?.autoplay_mode;if(!entry||typeof q.autoplay_enabled!=='boolean')throw Error('Denne MA-version tilbyder ikke de nødvendige Autoplay-indstillinger.');
         this._autoplayContext={entity,queue:q.queue_id,session};this._autoplayRepeat=['all','one'].includes(q.repeat_mode);const current=q.autoplay_enabled?(entry.value??entry.default_value??'auto'):'off';

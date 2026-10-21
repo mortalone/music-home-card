@@ -80,9 +80,16 @@ const assert=require('assert');const fs=require('fs');
  await page.getByRole('button',{name:'Gem musikvalg'}).click();await page.getByText('Gemt og genlæst fra MA.',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='repeat_set').at(-1).data.repeat),'off');
  const mutations=await page.evaluate(()=>calls.filter(x=>x.service==='music_home_queue_save').length);
  await page.evaluate(()=>queue.queue_id='changed-group');await page.getByRole('button',{name:'Gem musikvalg'}).click();await page.getByText('Afspillerens kø er ændret. Luk menuen og åbn den igen.',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='music_home_queue_save').length),mutations);
- await page.getByRole('button',{name:'Luk musikvalg'}).click();await page.evaluate(()=>{bridgeError=true;});await page.getByRole('button',{name:'Afspilningsvalg',exact:true}).click();await page.locator('.autoplay-panel .error').waitFor();await page.getByRole('button',{name:'Luk musikvalg'}).click();await page.evaluate(()=>{bridgeError=false;delete testHass.services.rest_command.music_home_queue_config;});
- await page.getByRole('button',{name:'Afspilningsvalg',exact:true}).click();await page.getByText('Opdatér music_home_bridge.yaml i HA for at bruge Autoplay.',{exact:false}).waitFor();await page.getByRole('button',{name:'Luk musikvalg'}).click();await page.evaluate(()=>testHass.services.rest_command.music_home_queue_config={});
+ await page.getByRole('button',{name:'Luk musikvalg'}).click();await page.evaluate(()=>{bridgeError=true;});await page.getByRole('button',{name:'Afspilningsvalg',exact:true}).click();await page.locator('.autoplay-panel .error').waitFor();await page.getByRole('button',{name:'Luk musikvalg'}).click();await page.evaluate(()=>{bridgeError=false;window.missingBridge='music_home_queue_config';});
+ await page.getByRole('button',{name:'Afspilningsvalg',exact:true}).click();await page.getByText('HA mangler handlingen rest_command.music_home_queue_config.',{exact:false}).waitFor();await page.getByRole('button',{name:'Luk musikvalg'}).click();await page.evaluate(()=>window.missingBridge=null);
  assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='play_media').length),playbackBefore,'Autoplay must never start or replace playback');
+ // Missing frontend service metadata must not block real HA actions.
+ await page.evaluate(()=>{window.savedServices=testHass.services;testHass.services={};card.hass={...testHass};});
+ await page.getByRole('button',{name:'Afspilningsvalg',exact:true}).click();await page.getByRole('combobox',{name:'Fortsæt med',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Gem musikvalg'}).click();await page.getByText('Gemt og genlæst fra MA.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Luk musikvalg'}).click();
+ await page.getByRole('button',{name:'Vis afspilningskø'}).click();await page.getByText('Kønummer 2',{exact:true}).waitFor();
+ await page.evaluate(()=>{testHass.services=window.savedServices;card.hass={...testHass};});
  // Only one playback-options button in the footer; responsive to card width, not window.
  assert.equal(await page.locator('.player [data-action="shuffle"],.player [data-action="repeat"]').count(),0);
  await page.setViewportSize({width:1280,height:900});
