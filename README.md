@@ -114,3 +114,11 @@ Shuffle, repeat og automatisk fortsættelse er samlet under Afspilningsvalg ved 
 
 ## HA-handlinger i kiosk (0.2.13)
 Autoplay og køvisning kalder nu HA direkte i stedet for at kræve, at handlingerne findes i frontendens lokale liste. Det undgår en falsk besked om manglende bridge ved ufuldstændige eller gamle handlingslister. En handling, som reelt mangler i HA, vises med sit præcise navn. Ingen ændring af YAML eller tokens.
+
+## Music Screensaver shortcut (0.2.14)
+
+In the card editor select **Music Screensaver: Aktiv-switch (denne skærm)** and **Music Screensaver: Visualisering-select (samme skærm)** from the same Kiosk device. The fields are `screensaver_entity` and `screensaver_effect_entity`. No bridge YAML is required. The explicit device choice prevents a dashboard opened on another device from accidentally controlling a different screen.
+
+A screen button appears to the right of Alle/Favoritter/Playlister on Home. Tap opens the currently selected visualization; hold for 550 ms or right-click to choose a visualization and open it. Keyboard: Enter opens; Arrow Down opens the picker; Escape closes it. Options come from the configured select entity. The button appears when its Aktiv-switch is configured; the selector is optional for ordinary tap.
+
+Opening sends switch.turn_on; choosing sends select.select_option followed by switch.turn_on. It does not start music. The screensaver must be installed and enabled on that Kiosk device.

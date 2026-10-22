@@ -157,5 +157,30 @@ const assert=require('assert');const fs=require('fs');
  await page.evaluate(()=>card.setConfig({entity:'media_player.stueetagen_ma',header_clock:true,header_clock_size:999}));assert.equal(await page.locator('.header-clock').evaluate(el=>getComputedStyle(el).fontSize),'64px');
  await page.evaluate(()=>card.setConfig({entity:'media_player.stueetagen_ma',show_header_volume:false,show_header_refresh:false,show_header_logo:false,show_header_name:false,header_clock:false,header_entity_1:'sensor.test_battery'}));await page.getByText('Dine playlister',{exact:true}).waitFor();assert.equal(await page.locator('.header-volume').isVisible(),false);assert.equal(await page.locator('.header-clock').isVisible(),false);assert.equal(await page.locator('.header-entity').count(),1);assert.equal(await page.getByRole('button',{name:'Vis volumen',exact:true}).isVisible(),true,'Bottom volume remains available');
  await page.getByRole('button',{name:'Vis volumen',exact:true}).click();assert(await page.locator('.volume').isVisible());assert(await page.locator('.volume').evaluate(el=>{const panel=el.getBoundingClientRect(),footer=el.parentElement.getBoundingClientRect();return Math.abs(panel.bottom-(footer.top-8))<1&&panel.left>=0&&panel.right<=innerWidth;}),'Mobile volume stays near player and within screen');await page.screenshot({path:'dist/qa/music-home-volume-bottom.png'});await page.getByRole('button',{name:'Vis volumen',exact:true}).click();assert.equal(await page.locator('.volume').isVisible(),false);
+ // Screensaver control uses explicitly configured target, and long press must not activate it.
+ await page.evaluate(()=>{
+   testHass.states['switch.screen_active']={state:'off',attributes:{}};
+   testHass.states['select.screen_effect']={state:'ferrofluid',attributes:{options:['vinyl','ferrofluid','cotodama','hybrid_vinyl']}};
+   card.setConfig({entity:'media_player.stueetagen_ma',screensaver_entity:'switch.screen_active',screensaver_effect_entity:'select.screen_effect'});
+ });
+ await page.getByRole('button',{name:'Åbn musikvisualisering',exact:true}).waitFor();
+ await page.evaluate(()=>calls.length=0);
+ await page.getByRole('button',{name:'Åbn musikvisualisering',exact:true}).click();
+ assert.deepEqual(await page.evaluate(()=>calls.filter(x=>x.domain==='switch')),[{domain:'switch',service:'turn_on',data:{entity_id:'switch.screen_active'}}]);
+ await page.evaluate(()=>calls.length=0);
+ const screen=page.getByRole('button',{name:'Åbn musikvisualisering',exact:true});
+ await screen.dispatchEvent('pointerdown',{button:0,pointerId:1,clientX:10,clientY:10});await page.waitForTimeout(650);
+ await screen.dispatchEvent('pointerup',{button:0,pointerId:1});await screen.dispatchEvent('click');
+ assert.equal(await page.evaluate(()=>calls.length),0,'Hold opens picker without activating');
+ assert(await page.getByRole('dialog',{name:'Vælg visualisering'}).isVisible());
+ await page.getByRole('button',{name:'Vinyl + sangtekst',exact:true}).click();
+ assert.deepEqual(await page.evaluate(()=>calls),[
+   {domain:'select',service:'select_option',data:{entity_id:'select.screen_effect',option:'hybrid_vinyl'}},
+   {domain:'switch',service:'turn_on',data:{entity_id:'switch.screen_active'}}]);
+ for(const width of [320,720]){await page.setViewportSize({width,height:800});assert(await page.locator('.home-filters').evaluate(el=>el.scrollWidth<=el.clientWidth),'Filters plus screen button fit '+width);}
+ await screen.focus();await page.keyboard.press('ArrowDown');assert(await page.getByRole('dialog',{name:'Vælg visualisering'}).isVisible());
+ await page.screenshot({path:'dist/qa/music-home-screensaver.png'});await page.keyboard.press('Escape');assert(!(await page.getByRole('dialog',{name:'Vælg visualisering'}).isVisible()));
+ await page.evaluate(()=>{testHass.states['switch.screen_active'].state='unavailable';calls.length=0;});
+ await screen.click();await page.getByText('Music Screensaver er ikke tilgængelig på den valgte enhed.',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>calls.length),0);
  assert.deepEqual(errors,[]);console.log('Music Home browser checks passed: read-only startup, MA schemas, navigation, playback placement, responsive views, escaping, stale search and HA push handling. Mock HA/MA, not live speakers.');
 }catch(e){if(page)console.log('MUSIC_QA_DEBUG '+JSON.stringify(await page.evaluate(()=>({calls:calls.slice(-15),content:card.shadowRoot.querySelector('main').textContent,view:card._view,request:card._request}))));throw e;}finally{await browser?.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1);});
