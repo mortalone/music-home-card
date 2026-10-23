@@ -1,4 +1,4 @@
-# Music Home 0.2.13
+# Music Home 0.2.16
 
 A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: the basic library/search/player requires no MA URL, token, new add-on or frontend build tools. The optional AI DJ and MA recommendation feeds use server-side HA REST commands.
 
@@ -134,3 +134,7 @@ Optional editor fields, explicitly configured per screen:
 - `twinkly_pattern_entity`: HA select/input_select connected to the bridge. Options are read dynamically; choosing one changes only the pattern, not power. Missing HA wiring produces an explanatory error.
 
 No tokens or private endpoints belong in card configuration. Permanent defaults remain in HA/Kiosk. The display coordinator and Twinkly pattern-to-REST automation must be installed separately; merely creating an input_select does not connect it to the bridge.
+
+## Playlister i søgning (0.2.16)
+
+Normal søgning supplerer nu MA-global søgning med et parallelt navneopslag i MA-playlistebiblioteket (op til 40 resultater). Gemte playlister vises først; identiske URI’er samles. Delvise fejl vises uden at skjule de tilgængelige resultater. Ingen bridge-ændring nødvendig. Playlister uden for MA afhænger fortsat af udbyderens søgeresultater.

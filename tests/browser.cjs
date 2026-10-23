@@ -25,6 +25,10 @@ const assert=require('assert');const fs=require('fs');
  await page.getByRole('button',{name:'Bibliotek',exact:true}).click();await page.locator('.library-tools').waitFor();await page.getByRole('button',{name:'Album',exact:true}).click();await page.locator('.row').first().waitFor();
  await page.getByRole('button',{name:'Vis covers'}).click();assert.equal(await page.locator('.grid .tile').count(),6);await page.getByRole('button',{name:'Vis liste'}).click();await page.screenshot({path:'dist/qa/music-home-library.png'});
  await page.getByRole('button',{name:'Søg',exact:true}).click();await page.getByRole('searchbox').fill('Lucie');await page.locator('.search-results .row').first().waitFor();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='search').length),1,'Search debounce');
+ await page.evaluate(()=>card._search('playlist-only'));await page.getByText('Min gemte playliste',{exact:true}).waitFor();
+ assert(await page.evaluate(()=>calls.some(x=>x.service==='get_library'&&x.service_data.search==='playlist-only'&&x.service_data.media_type==='playlist')));
+ await page.getByText('Min gemte playliste',{exact:true}).click();await page.getByRole('button',{name:'Som næste',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Søg',exact:true}).click();await page.getByRole('searchbox').fill('Lucie');await page.locator('.search-results .row').first().waitFor();
  // HA pushes must preserve the focused search and current library rendering.
  await page.getByRole('searchbox').focus();await page.evaluate(()=>{for(let i=0;i<50;i++)card.hass={...testHass};});assert.equal(await page.getByRole('searchbox').inputValue(),'Lucie');assert(await page.getByRole('searchbox').evaluate(e=>e===e.getRootNode().activeElement));
  // Old responses must not overwrite a newer query.
