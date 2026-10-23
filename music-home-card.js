@@ -102,8 +102,9 @@
       this.shadowRoot.addEventListener('pointerdown',e=>{
         if(!e.target.closest('[data-action="screensaver"],[data-action="twinkly"]')||e.button!==0)return;
         this._cancelScreenHold();this._screenSuppressClick=false;
+        const kind=e.target.closest('[data-action]').dataset.action;
         this._screenHold={x:e.clientX,y:e.clientY,id:e.pointerId};
-        this._screenHoldTimer=setTimeout(()=>{this._screenSuppressClick=true;this._openScreenMenu(e.target.closest('[data-action]').dataset.action);this._cancelScreenHold();},550);
+        this._screenHoldTimer=setTimeout(()=>{this._screenSuppressClick=true;this._openScreenMenu(kind);this._cancelScreenHold();},550);
       });
       this.shadowRoot.addEventListener('pointermove',e=>{const h=this._screenHold;if(h&&Math.hypot(e.clientX-h.x,e.clientY-h.y)>10){this._screenSuppressClick=true;this._cancelScreenHold();}});
       for(const name of ['pointerup','pointercancel','pointerleave'])this.shadowRoot.addEventListener(name,()=>this._cancelScreenHold());
