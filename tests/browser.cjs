@@ -182,5 +182,37 @@ const assert=require('assert');const fs=require('fs');
  await page.screenshot({path:'dist/qa/music-home-screensaver.png'});await page.keyboard.press('Escape');assert(!(await page.getByRole('dialog',{name:'Vælg visualisering'}).isVisible()));
  await page.evaluate(()=>{testHass.states['switch.screen_active'].state='unavailable';calls.length=0;});
  await screen.click();await page.getByText('Music Screensaver er ikke tilgængelig på den valgte enhed.',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>calls.length),0);
+ // Combined temporary display routing and guarded Twinkly control.
+ await page.evaluate(()=>{
+  testHass.states['script.display_now']={state:'off',attributes:{}};
+  testHass.states['script.twinkly_toggle']={state:'off',attributes:{}};
+  testHass.states['light.twinkly']={state:'on',attributes:{}};
+  testHass.states['input_select.pattern']={state:'mirror',attributes:{options:['mirror','disco']}};
+  testHass.states['switch.screen_active'].state='off';
+  card.setConfig({entity:'media_player.stueetagen_ma',display_script:'script.display_now',screensaver_entity:'switch.screen_active',screensaver_effect_entity:'select.screen_effect',twinkly_entity:'light.twinkly',twinkly_toggle_script:'script.twinkly_toggle',twinkly_pattern_entity:'input_select.pattern'});
+ });
+ await page.getByRole('button',{name:'Twinkly tænd/sluk',exact:true}).waitFor();await page.evaluate(()=>calls.length=0);
+ await page.getByRole('button',{name:'Twinkly tænd/sluk',exact:true}).click();
+ assert.deepEqual(await page.evaluate(()=>calls),[{domain:'script',service:'twinkly_toggle',data:{}}]);
+ assert.equal(await page.getByRole('button',{name:'Twinkly tænd/sluk',exact:true}).getAttribute('aria-pressed'),'true');
+ await page.evaluate(()=>calls.length=0);
+ const twinkly=page.getByRole('button',{name:'Twinkly tænd/sluk',exact:true});
+ await twinkly.dispatchEvent('pointerdown',{button:0,pointerId:2,clientX:10,clientY:10});await page.waitForTimeout(650);await twinkly.dispatchEvent('pointerup',{button:0,pointerId:2});await twinkly.dispatchEvent('click');
+ assert.equal(await page.evaluate(()=>calls.length),0,'Twinkly hold does not toggle');
+ await page.getByRole('button',{name:'Disco',exact:true}).click();
+ assert.deepEqual(await page.evaluate(()=>calls),[{domain:'input_select',service:'select_option',data:{entity_id:'input_select.pattern',option:'disco'}}]);
+ await page.evaluate(()=>calls.length=0);await screen.click();
+ assert.deepEqual(await page.evaluate(()=>calls),[{domain:'script',service:'display_now',data:{view:'last'}}]);
+ await screen.focus();await page.keyboard.press('ArrowDown');await page.getByRole('button',{name:'Naturbilleder',exact:true}).click();
+ assert.deepEqual(await page.evaluate(()=>calls.at(-1)),{domain:'script',service:'display_now',data:{view:'nature'}});
+ await screen.focus();await page.keyboard.press('ArrowDown');await page.getByRole('button',{name:'Familiealbum',exact:true}).click();
+ assert.deepEqual(await page.evaluate(()=>calls.at(-1)),{domain:'script',service:'display_now',data:{view:'family'}});
+ await screen.focus();await page.keyboard.press('ArrowDown');await page.getByRole('button',{name:'Tilbage til automatisk',exact:true}).click();
+ assert.deepEqual(await page.evaluate(()=>calls.at(-1)),{domain:'script',service:'display_now',data:{view:'auto'}});
+ await page.evaluate(()=>calls.length=0);await screen.focus();await page.keyboard.press('ArrowDown');await page.getByRole('button',{name:'Vinyl + sangtekst',exact:true}).click();
+ assert.deepEqual(await page.evaluate(()=>calls),[{domain:'select',service:'select_option',data:{entity_id:'select.screen_effect',option:'hybrid_vinyl'}},{domain:'script',service:'display_now',data:{view:'music'}}]);
+ for(const width of [320,720]){await page.setViewportSize({width,height:800});assert(await page.locator('.home-filters').evaluate(el=>el.scrollWidth<=el.clientWidth),'Two controls fit '+width);}
+ await screen.focus();await page.keyboard.press('ArrowDown');await page.screenshot({path:'dist/qa/music-home-display-controls.png'});await page.keyboard.press('Escape');
+ await page.evaluate(()=>{delete testHass.states['script.twinkly_toggle'];calls.length=0;});await twinkly.click();assert.equal(await page.evaluate(()=>calls.length),0,'Missing script must not bypass guard with light service');
  assert.deepEqual(errors,[]);console.log('Music Home browser checks passed: read-only startup, MA schemas, navigation, playback placement, responsive views, escaping, stale search and HA push handling. Mock HA/MA, not live speakers.');
 }catch(e){if(page)console.log('MUSIC_QA_DEBUG '+JSON.stringify(await page.evaluate(()=>({calls:calls.slice(-15),content:card.shadowRoot.querySelector('main').textContent,view:card._view,request:card._request}))));throw e;}finally{await browser?.close();server.kill();}})().catch(e=>{console.error(e);process.exit(1);});

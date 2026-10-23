@@ -122,3 +122,15 @@ In the card editor select **Music Screensaver: Aktiv-switch (denne skærm)** and
 A screen button appears to the right of Alle/Favoritter/Playlister on Home. Tap opens the currently selected visualization; hold for 550 ms or right-click to choose a visualization and open it. Keyboard: Enter opens; Arrow Down opens the picker; Escape closes it. Options come from the configured select entity. The button appears when its Aktiv-switch is configured; the selector is optional for ordinary tap.
 
 Opening sends switch.turn_on; choosing sends select.select_option followed by switch.turn_on. It does not start music. The screensaver must be installed and enabled on that Kiosk device.
+
+## Display and Twinkly controls (0.2.15)
+
+Optional editor fields, explicitly configured per screen:
+
+- `display_script`: coordinator script accepting `view: last | nature | family | music | auto`. Short press starts `last`; hold opens temporary display choices and music effects. The script owns the last choice, current override, normal default and restoration. It must not overwrite the default helper. `auto` dismisses the override and restores normal behavior at the next idle timeout. This script is an HA prerequisite, not installed by the card.
+- Existing `screensaver_entity` still means the **Music Screensaver Aktiv switch**, not Kiosk's master/active switch. `screensaver_effect_entity` remains the plugin visualization select. Without `display_script`, the existing music-only button keeps working.
+- `twinkly_entity`: Twinkly light used for status only.
+- `twinkly_toggle_script`: existing HA toggle script enforcing music conditions. The card calls this script directly and never calls light.turn_on/off.
+- `twinkly_pattern_entity`: HA select/input_select connected to the bridge. Options are read dynamically; choosing one changes only the pattern, not power. Missing HA wiring produces an explanatory error.
+
+No tokens or private endpoints belong in card configuration. Permanent defaults remain in HA/Kiosk. The display coordinator and Twinkly pattern-to-REST automation must be installed separately; merely creating an input_select does not connect it to the bridge.
