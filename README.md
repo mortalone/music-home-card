@@ -1,4 +1,4 @@
-# Music Home 0.2.16
+# Music Home 0.2.17
 
 A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: the basic library/search/player requires no MA URL, token, new add-on or frontend build tools. The optional AI DJ and MA recommendation feeds use server-side HA REST commands.
 
@@ -138,3 +138,13 @@ No tokens or private endpoints belong in card configuration. Permanent defaults 
 ## Playlister i søgning (0.2.16)
 
 Normal søgning supplerer nu MA-global søgning med et parallelt navneopslag i MA-playlistebiblioteket (op til 40 resultater). Gemte playlister vises først; identiske URI’er samles. Delvise fejl vises uden at skjule de tilgængelige resultater. Ingen bridge-ændring nødvendig. Playlister uden for MA afhænger fortsat af udbyderens søgeresultater.
+
+## Musikquiz-hurtigknap (0.2.17)
+
+Aktivér Music Quiz i Music Assistant. Åbn Music Quiz fra MA’s sidebjælke og kopiér browserens fulde adresse til korteditorens **Musikquiz: fuld URL til MA’s quizside** (`music_quiz_url`). Brug værtens quizside, ikke gæsternes invitation. Ved direkte MA-adgang er ruten normalt `http://DIN-MA:8095/#/music-quiz`; kopiér den faktiske adresse, især ved HA ingress eller proxy. Adresse og login skal virke i kioskens browser. Ingen tokens skal indsættes i kortet.
+
+Knappen vises på Hjem ved siden af Alle/Favoritter/Playlister og de andre hurtigknapper. Den åbner MA’s originale quizside i samme vindue, uden iframe. Brug browserens/Kiosks Tilbage for at vende tilbage til Music Home. Kortet opretter ikke et spil eller starter lyd ved åbning og viser ikke quizzen inde i Music Home.
+
+På MA-siden: vælg New Game, vælg musik og den ønskede højttaler/gruppe i Venue mode, opret spillet, og vis QR-koden. Deltagerne scanner med telefonen og svarer dér. Present mode viser lobby, spørgsmål og point på fællesskærmen. QR-koden kommer fra MA’s aktuelle spil; den er ikke et fast link i kortet. Værten skal have rettighed til at invitere brugere. Uden Remote Access skal telefonerne kunne nå MA lokalt.
+
+Music Quiz er eksperimentel. Dette tilføjer en genvej til den installerede MA-version; det ændrer ikke Kiosks idle/screensaver-regler. Der skal fortsat tages hensyn til automatisk screensaver under en quiz.

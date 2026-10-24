@@ -16,6 +16,13 @@ const assert=require('assert');const fs=require('fs');
  assert.equal(await page.locator('.shortcut').count(),8);assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='play_media').length),0,'Never auto-play');
  assert.equal(await page.locator('.volume').isVisible(),false);assert.equal(await page.locator('.app-link').getAttribute('href'),'app://com.spotify.music');
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'No page horizontal overflow');
+ // Quiz shortcut is opt-in, uses the configured host URL and does not start playback.
+ assert.equal(await page.getByRole('link',{name:'Åbn Musikquiz'}).count(),0);
+ await page.evaluate(()=>{card._config.music_quiz_url='https://ma.example/#/music-quiz';return card._navigate('home');});
+ const quiz=page.getByRole('link',{name:'Åbn Musikquiz'});await quiz.waitFor();assert.equal(await quiz.getAttribute('href'),'https://ma.example/#/music-quiz');assert.equal(await quiz.getAttribute('target'),null);
+ assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='play_media').length),0);
+ await page.evaluate(()=>{card._config.music_quiz_url='javascript:alert(1)';return card._navigate('home');});assert.equal(await page.getByRole('link',{name:'Åbn Musikquiz'}).count(),0);
+ await page.evaluate(()=>{delete card._config.music_quiz_url;return card._navigate('home');});
  fs.mkdirSync('dist/qa',{recursive:true});await page.screenshot({path:'dist/qa/music-home-portrait.png'});console.log('MUSIC_QA_PREVIEW portrait '+(await page.screenshot({type:'jpeg',quality:80})).toString('base64'));
  await page.locator('.shortcut').first().click();await page.locator('.detail-items .row').first().waitFor();assert.equal(await page.evaluate(()=>calls.filter(x=>x.service==='play_media').length),0,'Browse must not start playback');
  await page.getByRole('button',{name:'Som næste',exact:true}).click();assert.deepEqual(await page.evaluate(()=>calls.find(x=>x.service==='play_media').service_data),{entity_id:'media_player.stueetagen_ma',media_id:'library://playlist/0',media_type:'playlist',enqueue:'next'});
