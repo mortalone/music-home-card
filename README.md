@@ -1,4 +1,4 @@
-# Music Home 0.2.17
+# Music Home 0.2.18
 
 A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: the basic library/search/player requires no MA URL, token, new add-on or frontend build tools. The optional AI DJ and MA recommendation feeds use server-side HA REST commands.
 
@@ -148,3 +148,12 @@ Knappen vises på Hjem ved siden af Alle/Favoritter/Playlister og de andre hurti
 På MA-siden: vælg New Game, vælg musik og den ønskede højttaler/gruppe i Venue mode, opret spillet, og vis QR-koden. Deltagerne scanner med telefonen og svarer dér. Present mode viser lobby, spørgsmål og point på fællesskærmen. QR-koden kommer fra MA’s aktuelle spil; den er ikke et fast link i kortet. Værten skal have rettighed til at invitere brugere. Uden Remote Access skal telefonerne kunne nå MA lokalt.
 
 Music Quiz er eksperimentel. Dette tilføjer en genvej til den installerede MA-version; det ændrer ikke Kiosks idle/screensaver-regler. Der skal fortsat tages hensyn til automatisk screensaver under en quiz.
+ 
+## Søgefiltre, Spotify-prioritering og kilde-badges (0.2.18)
+ 
+- **Kilde-badges på alle søgeresultater**: Hvert resultat viser nu en tydelig badge for musikkilden (`SPOTIFY`, `YOUTUBE`, `BIBLIOTEK` eller `RADIO`), så man ved et øjekast kan se, hvor nummeret eller albummet kommer fra.
+- **Prioritering af Spotify**: Spotify-elementer sorteres øverst i alle kategorier pga. hurtigere opstart og mere snappy streaming sammenlignet med YouTube/video-kilder.
+- **Kategorifiltre**: Vælg mellem **Alle**, **Playlister**, **Sange**, **Album** og **Kunstnere**. Når **Playlister** vælges, vises playlisterne i et fuldt, berøringsvenligt gitter (grid) med store covers og kilde-badges. I standardvisningen (Alle) er playlister placeret forrest, og rækken af sange er begrænset, så playlister og album ikke skubbes ud af skærmen.
+- **Kildevælger / filter**: Vælg mellem **Alle kilder**, **Spotify**, **YouTube** og **Bibliotek** for øjeblikkeligt at filtrere søgeresultaterne.
+- **Progressiv to-faset søgning (lazy load)**: Lokale biblioteksresultater og gemte playlister hentes og vises øjeblikkeligt (<100 ms) med en diskret online-indikator, mens online-søgningen mod Spotify og YouTube kører i baggrunden og flettes ind, når svaret er klar.
+
