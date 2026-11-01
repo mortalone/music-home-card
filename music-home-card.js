@@ -269,7 +269,7 @@ button[data-item-menu] svg{stroke-width:3.2}
         const globalPromise=this._service('search',{config_entry_id:entry,name:query,limit:24},true);
 
         localPromise.then(localRes=>{
-          if(seq!==this._seq||request!==this._request||!this.isConnected||!this._searchLoadingOnline)return;
+          if(seq!==this._seq||request!==this._request||!this.isConnected)return;
           const [plRes,trRes]=localRes;
           const plItems=plRes.status==='fulfilled'&&Array.isArray(plRes.value?.items)?plRes.value.items.map(itemOf).filter(x=>x.uri):[];
           const trItems=trRes.status==='fulfilled'&&Array.isArray(trRes.value?.items)?trRes.value.items.map(itemOf).filter(x=>x.uri):[];
