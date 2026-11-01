@@ -418,7 +418,8 @@ button[data-item-menu] svg{stroke-width:3.2}
         if(this._config.display_script)this._scriptState(this._config.display_script);else this._screenState(active,'switch');
         if(effect!==undefined){
           const state=this._screenState(selector,'select');
-          if(!(state.attributes.options??[]).includes(effect))throw Error('Denne visualisering er ikke længere tilgængelig. Åbn valget igen.');
+          const opts=Array.isArray(state.attributes.options)?state.attributes.options:[];
+          if(opts.length&&!opts.includes(effect)&&!['hybrid_vinyl','hybrid_ferrofluid','vinyl','ferrofluid','cotodama','bloom','silk','chrome','aurora','coral','sand_table','prism_party'].includes(effect))throw Error('Denne visualisering er ikke længere tilgængelig. Åbn valget igen.');
           await this._hass.callService('select','select_option',{entity_id:selector,option:effect});
         }
         if(this._config.display_script)await this._callDisplay('music');else await this._hass.callService('switch','turn_on',{entity_id:active});
@@ -429,10 +430,32 @@ button[data-item-menu] svg{stroke-width:3.2}
     _openScreenMenu(kind='screensaver'){
       this._visualMenuKind=kind;if(kind==='twinkly')return this._openTwinklyMenu();
       const panel=this.shadowRoot.querySelector('.screensaver-panel');if(!panel)return;
-      const names={vinyl:'Vinyl',ferrofluid:'Ferrofluid',cotodama:'Sangtekst',hybrid_vinyl:'Vinyl + sangtekst',hybrid_ferrofluid:'Ferrofluid + sangtekst'};
+      const names={
+        hybrid_vinyl:'Vinyl + sangtekst',
+        hybrid_ferrofluid:'Ferrofluid + sangtekst',
+        vinyl:'Vinyl',
+        ferrofluid:'Ferrofluid',
+        cotodama:'Sangtekst',
+        bloom:'Bloom (Blomst)',
+        silk:'Silk (Silke)',
+        chrome:'Chrome',
+        aurora:'Aurora (Nordlys)',
+        coral:'Coral (Koral)',
+        sand_table:'Kinetisk sandbord',
+        prism_party:'Prism Party'
+      };
+      const formatOption=key=>names[key]??String(key).replace(/[_-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+      const knownOptions=['hybrid_vinyl','hybrid_ferrofluid','vinyl','ferrofluid','cotodama','bloom','silk','chrome','aurora','coral','sand_table','prism_party'];
       let body;
-      try{const state=this._screenState(this._config.screensaver_effect_entity,'select');
-        body=(state.attributes.options??[]).map(option=>`<button class="effect-option" data-action="screensaver-effect" data-effect="${esc(option)}" aria-pressed="${state.state===option}">${esc(names[option]??option)}</button>`).join('')||'<p>Ingen visualiseringer tilgængelige.</p>';
+      try{
+        const state=this._screenState(this._config.screensaver_effect_entity,'select');
+        const entityOptions=Array.isArray(state.attributes.options)?state.attributes.options:[];
+        const seen=new Set();
+        const options=[];
+        for(const opt of [...entityOptions,...knownOptions]){
+          if(!seen.has(opt)){seen.add(opt);options.push(opt);}
+        }
+        body=options.map(option=>`<button class="effect-option" data-action="screensaver-effect" data-effect="${esc(option)}" aria-pressed="${state.state===option}">${esc(formatOption(option))}</button>`).join('')||'<p>Ingen visualiseringer tilgængelige.</p>';
       }catch(error){body=`<p>${esc(error.message??error)}</p>`;}
       if(this._config.display_script)body=`<p>Vis nu — dit faste standardvalg ændres ikke.</p>${[['nature','Naturbilleder'],['family','Familiealbum'],['music','Musikvisualisering'],['auto','Tilbage til automatisk']].map(([view,name])=>`<button class="effect-option" data-action="display-now" data-view="${view}">${name}</button>`).join('')}<h3>Musikkens visualisering</h3>${body}`;
       panel.setAttribute('aria-label','Vælg visualisering');
@@ -474,7 +497,8 @@ button[data-item-menu] svg{stroke-width:3.2}
     _openTwinklyMenu(){
       const panel=this.shadowRoot.querySelector('.screensaver-panel');if(!panel)return;
       let body;const names={spectrum:'Spektrum',mirror:'Spejlet spektrum',pulse:'Puls',wave:'Bølge',particles:'Partikler',tunnel:'Tunnel',disco:'Disco'};
-      try{const {state,options}=this._twinklyOptions();body=options.map(option=>`<button class="effect-option" data-action="twinkly-effect" data-effect="${esc(option)}" aria-pressed="${state.state===option}">${esc(names[option]??option)}</button>`).join('')||'<p>Ingen mønstre tilgængelige.</p>';}
+      const formatTwinkly=key=>names[key]??String(key).replace(/[_-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+      try{const {state,options}=this._twinklyOptions();body=options.map(option=>`<button class="effect-option" data-action="twinkly-effect" data-effect="${esc(option)}" aria-pressed="${state.state===option}">${esc(formatTwinkly(option))}</button>`).join('')||'<p>Ingen mønstre tilgængelige.</p>';}
       catch(e){body=`<p>${esc(e.message??e)}</p>`;}
       panel.setAttribute('aria-label','Twinkly lysmønster');panel.innerHTML=`<div class="panel-head"><strong>Twinkly lysmønster</strong><button class="icon" data-action="screensaver-close" aria-label="Luk visualiseringsvalg">×</button></div><p>Vælg mønster. Tænd/sluk styres separat.</p>${body}`;panel.hidden=false;(panel.querySelector('.effect-option')??panel.querySelector('button'))?.focus();
     }

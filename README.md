@@ -157,16 +157,18 @@ Music Quiz er eksperimentel. Dette tilføjer en genvej til den installerede MA-v
 - **Kildevælger / filter**: Vælg mellem **Alle kilder**, **Spotify**, **YouTube** og **Bibliotek** for øjeblikkeligt at filtrere søgeresultaterne.
 - **Progressiv to-faset søgning (lazy load)**: Lokale biblioteksresultater og gemte playlister hentes og vises øjeblikkeligt (<100 ms) med en diskret online-indikator, mens online-søgningen mod Spotify og YouTube kører i baggrunden og flettes ind, når svaret er klar.
 
-## Handlingsmenu for musiknumre (0.2.19)
+## Handlingsmenu for musiknumre & dynamiske visualiseringer (0.2.19)
 
-Hver sangrække i søgeresultater, playlister, album og bibliotek har nu en tre-prikkers handlingsknap (`···`) i stedet for det simple plustegn:
-- **Tryk på sangrækken**: Afspiller nummeret med det samme som før (`Afspil nu`).
-- **Tryk på `···` (handlingsmenu)**: Åbner en berøringsvenlig popover/bundmenu med flere logiske valg:
-  - ▶️ **Afspil nu**: Erstatter afspilningskøen og starter sangen straks.
-  - ⏭️ **Spil som næste**: Indsætter nummeret som det næste i køen efter det aktuelle nummer.
-  - ➕ **Sidst i køen**: Tilføjer sangen til slutningen af afspilningskøen.
-  - 📻 **Start sang-radio**: Starter Music Assistants dynamiske radio baseret på det valgte nummer (`radio_mode: true`).
-  - 💿 **Gå til album**: Åbner albummet direkte i kortet (hvis album-metadata er tilgængelig).
-  - 👤 **Gå til kunstner**: Åbner kunstnerens side i kortet (hvis kunstner-metadata er tilgængelig).
-- **Lukning**: Menuen lukkes nemt ved klik udenfor, på krydset (✕), på Escape, eller når man navigerer.
+- **Handlingsmenu for sange (`···`)**: Hver sangrække i søgeresultater, playlister, album og bibliotek har nu en tre-prikkers knap i stedet for det simple plustegn:
+  - **Tryk på sangrækken**: Afspiller nummeret med det samme som før (`Afspil nu`).
+  - **Tryk på `···` (handlingsmenu)**: Åbner en berøringsvenlig popover/bundmenu med flere logiske valg:
+    - ▶️ **Afspil nu**: Erstatter afspilningskøen og starter sangen straks.
+    - ⏭️ **Spil som næste**: Indsætter nummeret som det næste i køen efter det aktuelle nummer.
+    - ➕ **Sidst i køen**: Tilføjer sangen til slutningen af afspilningskøen.
+    - 📻 **Start sang-radio**: Starter Music Assistants dynamiske radio baseret på det valgte nummer (`radio_mode: true`).
+    - 💿 **Gå til album**: Åbner albummet direkte i kortet (hvis album-metadata er tilgængelig).
+    - 👤 **Gå til kunstner**: Åbner kunstnerens side i kortet (hvis kunstner-metadata er tilgængelig).
+  - **Lukning**: Menuen lukkes nemt ved klik udenfor, på krydset (✕), på Escape, eller når man navigerer.
+
+- **Dynamiske screensaver-visualiseringer**: Vælgeren for Music Screensaver understøtter nu alle 12 visualiseringer fra plugin v0.1.31 (inkl. de 7 nye: Bloom, Silk, Chrome, Aurora, Coral, Kinetisk sandbord og Prism Party). Mulighederne indlæses dynamisk fra Home Assistant og formateres automatisk med pæne navne (både for kendte og fremtidige visualiseringer).
 
