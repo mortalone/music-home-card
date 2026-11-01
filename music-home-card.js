@@ -1,6 +1,6 @@
-/* Music Home 0.2.19 — MIT; uses the signed-in Home Assistant connection. */
+/* Music Home 0.2.20 — MIT; uses the signed-in Home Assistant connection. */
 (() => {
-  const VERSION = '0.2.19';
+  const VERSION = '0.2.20';
   const LABELS = {playlist:'Playlister',album:'Album',artist:'Kunstnere',track:'Favoritnumre',radio:'Radio',podcast:'Podcasts',audiobook:'Lydbøger'};
   const SEARCH_LABELS = {playlist:'Playlister',album:'Album',artist:'Kunstnere',track:'Sange',radio:'Radio',podcast:'Podcasts',audiobook:'Lydbøger'};
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -419,7 +419,7 @@ button[data-item-menu] svg{stroke-width:3.2}
         if(effect!==undefined){
           const state=this._screenState(selector,'select');
           const opts=Array.isArray(state.attributes.options)?state.attributes.options:[];
-          if(opts.length&&!opts.includes(effect)&&!['hybrid_vinyl','hybrid_ferrofluid','vinyl','ferrofluid','cotodama','bloom','silk','chrome','aurora','coral','sand_table','prism_party'].includes(effect))throw Error('Denne visualisering er ikke længere tilgængelig. Åbn valget igen.');
+          if(!opts.includes(effect))throw Error('HA tilbyder ikke denne visualisering endnu. Opdater Music Screensaver, genstart Kiosk Satellite, og åbn valget igen.');
           await this._hass.callService('select','select_option',{entity_id:selector,option:effect});
         }
         if(this._config.display_script)await this._callDisplay('music');else await this._hass.callService('switch','turn_on',{entity_id:active});
@@ -445,17 +445,13 @@ button[data-item-menu] svg{stroke-width:3.2}
         prism_party:'Prism Party'
       };
       const formatOption=key=>names[key]??String(key).replace(/[_-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-      const knownOptions=['hybrid_vinyl','hybrid_ferrofluid','vinyl','ferrofluid','cotodama','bloom','silk','chrome','aurora','coral','sand_table','prism_party'];
+
       let body;
       try{
         const state=this._screenState(this._config.screensaver_effect_entity,'select');
         const entityOptions=Array.isArray(state.attributes.options)?state.attributes.options:[];
-        const seen=new Set();
-        const options=[];
-        for(const opt of [...entityOptions,...knownOptions]){
-          if(!seen.has(opt)){seen.add(opt);options.push(opt);}
-        }
-        body=options.map(option=>`<button class="effect-option" data-action="screensaver-effect" data-effect="${esc(option)}" aria-pressed="${state.state===option}">${esc(formatOption(option))}</button>`).join('')||'<p>Ingen visualiseringer tilgængelige.</p>';
+        const options=[...new Set(entityOptions.filter(option=>typeof option==='string'&&option.length))];
+        body=options.map(option=>`<button class="effect-option" data-action="screensaver-effect" data-effect="${esc(option)}" aria-pressed="${state.state===option}">${esc(formatOption(option))}</button>`).join('')||'<p>HA har endnu ikke meldt nogen visualiseringer tilgængelige. Kontroller pluginet og forbindelsen til Kiosk Satellite.</p>';
       }catch(error){body=`<p>${esc(error.message??error)}</p>`;}
       if(this._config.display_script)body=`<p>Vis nu — dit faste standardvalg ændres ikke.</p>${[['nature','Naturbilleder'],['family','Familiealbum'],['music','Musikvisualisering'],['auto','Tilbage til automatisk']].map(([view,name])=>`<button class="effect-option" data-action="display-now" data-view="${view}">${name}</button>`).join('')}<h3>Musikkens visualisering</h3>${body}`;
       panel.setAttribute('aria-label','Vælg visualisering');

@@ -1,3 +1,9 @@
+## 0.2.20 — sikre visualiseringsvalg
+
+Music Home viser nu kun visualiseringer, som den valgte HA-select faktisk tilbyder. Kendte navne er kun visningsetiketter og tilsidesætter aldrig HA's muligheder. Valget kontrolleres igen ved tryk; et afvist valg starter hverken screensaver-switch eller visningsscript, og knappen frigives efter fejl.
+
+Hvis HA kun viser de fem gamle muligheder, selv om Music Screensaver 0.1.31 er installeret, genstart Kiosk Satellite efter opdateringen. Kontroller derefter select-entitetens `options` i HA. Hvis de stadig er gamle, genindlæs den tilhørende ESPHome-integration, så enhedsoplysningerne bliver hentet igen. Slet ikke entiteterne. Kortet gætter ikke på nye muligheder, mens HA stadig melder de gamle.
+
 # Music Home 0.2.19
 
 A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: the basic library/search/player requires no MA URL, token, new add-on or frontend build tools. The optional AI DJ and MA recommendation feeds use server-side HA REST commands.
