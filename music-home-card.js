@@ -246,12 +246,12 @@ button[data-item-menu] svg{stroke-width:3.2}
           const tracks=await this._aiSearch(query,seq,request,dest);
           if(seq!==this._seq||request!==this._request||!this.isConnected)return;
           this._searchResults={playlists:[],tracks:tracks.map(itemOf).filter(x=>x.uri),albums:[],artists:[],radio:[],podcasts:[],audiobooks:[]};
+          this._renderSearchResults();
         }catch(e){
           if(seq===this._seq&&request===this._request)dest.innerHTML=`<p class="notice error">${esc(e.message??e)}</p>`;
           return;
         }finally{
           this._searchLoadingOnline=false;
-          if(seq===this._seq&&request===this._request)this._renderSearchResults();
         }
         return;
       }
