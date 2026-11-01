@@ -1,11 +1,11 @@
-# Music Home 0.2.18
+# Music Home 0.2.19
 
 A Spotify-inspired, cover-first Lovelace card for the family's everyday music view. Independent of Party Mode, Party Guest and AI DJ. Keeps the official Music Assistant and uses the signed-in HA connection: the basic library/search/player requires no MA URL, token, new add-on or frontend build tools. The optional AI DJ and MA recommendation feeds use server-side HA REST commands.
 
 - Home: eight compact shortcuts plus cover rails for playlists, albums, favorite tracks and favorite radio stations.
 - Search: debounced global MA search across the connected providers, with covers and track rows.
 - Library: playlist / album / artist / favorites / radio / podcast / audiobook tabs; list or cover grid and pagination.
-- Collections: inspect tracks without starting playback. **Spil** replaces the queue with the selected collection, **Som næste** inserts next, and **Tilføj til kø** appends. Tapping an individual track starts it via MA's `play` queue option; the adjacent + appends it.
+- Collections: inspect tracks without starting playback. **Spil** replaces the queue with the selected collection, **Som næste** inserts next, and **Tilføj til kø** appends. Tapping an individual track starts it via MA's `play` queue option; the adjacent `···` action menu allows choosing play now, play next, add to end, song radio, go to album, or go to artist.
 - Mini player: previous / pause / next, selected MA speaker state and optional volume slider.
 - Optional **Åbn Spotify-app** link for Kiosk Satellite's `app://com.spotify.music` scheme. Requires a host version supporting app links and an installed/allowed Spotify app. It launches Spotify; it does not select an output or log in. In ordinary browsers keep this option off.
 
@@ -156,4 +156,17 @@ Music Quiz er eksperimentel. Dette tilføjer en genvej til den installerede MA-v
 - **Kategorifiltre**: Vælg mellem **Alle**, **Playlister**, **Sange**, **Album** og **Kunstnere**. Når **Playlister** vælges, vises playlisterne i et fuldt, berøringsvenligt gitter (grid) med store covers og kilde-badges. I standardvisningen (Alle) er playlister placeret forrest, og rækken af sange er begrænset, så playlister og album ikke skubbes ud af skærmen.
 - **Kildevælger / filter**: Vælg mellem **Alle kilder**, **Spotify**, **YouTube** og **Bibliotek** for øjeblikkeligt at filtrere søgeresultaterne.
 - **Progressiv to-faset søgning (lazy load)**: Lokale biblioteksresultater og gemte playlister hentes og vises øjeblikkeligt (<100 ms) med en diskret online-indikator, mens online-søgningen mod Spotify og YouTube kører i baggrunden og flettes ind, når svaret er klar.
+
+## Handlingsmenu for musiknumre (0.2.19)
+
+Hver sangrække i søgeresultater, playlister, album og bibliotek har nu en tre-prikkers handlingsknap (`···`) i stedet for det simple plustegn:
+- **Tryk på sangrækken**: Afspiller nummeret med det samme som før (`Afspil nu`).
+- **Tryk på `···` (handlingsmenu)**: Åbner en berøringsvenlig popover/bundmenu med flere logiske valg:
+  - ▶️ **Afspil nu**: Erstatter afspilningskøen og starter sangen straks.
+  - ⏭️ **Spil som næste**: Indsætter nummeret som det næste i køen efter det aktuelle nummer.
+  - ➕ **Sidst i køen**: Tilføjer sangen til slutningen af afspilningskøen.
+  - 📻 **Start sang-radio**: Starter Music Assistants dynamiske radio baseret på det valgte nummer (`radio_mode: true`).
+  - 💿 **Gå til album**: Åbner albummet direkte i kortet (hvis album-metadata er tilgængelig).
+  - 👤 **Gå til kunstner**: Åbner kunstnerens side i kortet (hvis kunstner-metadata er tilgængelig).
+- **Lukning**: Menuen lukkes nemt ved klik udenfor, på krydset (✕), på Escape, eller når man navigerer.
 
