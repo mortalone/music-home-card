@@ -1,6 +1,6 @@
-/* Music Home 0.2.20 — MIT; uses the signed-in Home Assistant connection. */
+/* Music Home 0.2.21 — MIT; uses the signed-in Home Assistant connection. */
 (() => {
-  const VERSION = '0.2.20';
+  const VERSION = '0.2.21';
   const LABELS = {playlist:'Playlister',album:'Album',artist:'Kunstnere',track:'Favoritnumre',radio:'Radio',podcast:'Podcasts',audiobook:'Lydbøger'};
   const SEARCH_LABELS = {playlist:'Playlister',album:'Album',artist:'Kunstnere',track:'Sange',radio:'Radio',podcast:'Podcasts',audiobook:'Lydbøger'};
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -28,13 +28,14 @@
     const img = String(x?.image ?? '');
     const ver = String(x?.version ?? '');
     const name = String(x?.name ?? '');
-    if (/^spotify/i.test(uri) || /scdn\.co/i.test(img)) return { id: 'spotify', name: 'Spotify', priority: 1 };
-    if (/^(ytmusic|youtube)/i.test(uri) || /googlevideo|ytimg|youtube/i.test(img) || /official\s+video|music\s+video/i.test(ver) || (/^(opensubsonic|subsonic)/i.test(uri) && (/track\/(?!track-|tr-)[A-Za-z0-9_-]{11}(?:$|[^A-Za-z0-9_-])/i.test(uri) || /album-[A-Za-z0-9_-]{11}(?:$|[^A-Za-z0-9_-])/i.test(uri) || /official\s+video|music\s+video|@/i.test(name)))) {
+    const prov = String(x?.provider ?? x?.provider_instance ?? x?.provider_domain ?? '');
+    if (/spotify/i.test(prov) || /^spotify/i.test(uri) || /spotify|scdn\.co/i.test(img)) return { id: 'spotify', name: 'Spotify', priority: 1 };
+    if (/youtube|ytmusic/i.test(prov) || /^(ytmusic|youtube)/i.test(uri) || /googlevideo|ytimg|youtube/i.test(img) || /official\s+video|music\s+video/i.test(ver) || (/^(opensubsonic|subsonic)/i.test(uri) && (/track\/(?!track-|tr-)[A-Za-z0-9_-]{11}(?:$|[^A-Za-z0-9_-])/i.test(uri) || /album-[A-Za-z0-9_-]{11}(?:$|[^A-Za-z0-9_-])/i.test(uri) || /official\s+video|music\s+video|@/i.test(name)))) {
       return { id: 'youtube', name: 'YouTube', priority: 4 };
     }
-    if (/^(opensubsonic|subsonic)/i.test(uri)) return { id: 'subsonic', name: 'Subsonic', priority: 3 };
-    if (/^library/i.test(uri)) return { id: 'library', name: 'Bibliotek', priority: 2 };
-    if (/^(radiobrowser|tunein)/i.test(uri)) return { id: 'radio', name: 'Radio', priority: 2 };
+    if (/subsonic/i.test(prov) || /^(opensubsonic|subsonic)/i.test(uri)) return { id: 'subsonic', name: 'Subsonic', priority: 3 };
+    if (/library/i.test(prov) || /^library/i.test(uri)) return { id: 'library', name: 'Bibliotek', priority: 2 };
+    if (/radio/i.test(prov) || /^(radiobrowser|tunein)/i.test(uri)) return { id: 'radio', name: 'Radio', priority: 2 };
     return { id: 'other', name: 'Kilde', priority: 3 };
   };
   const sortByProvider = list => [...list].sort((a, b) => {
@@ -75,7 +76,7 @@ button[data-item-menu] svg{stroke-width:3.2}
 @keyframes spin{100%{transform:rotate(360deg)}}
 `;
   class MusicHomeCard extends HTMLElement {
-    constructor(){super();this.attachShadow({mode:'open'});this._favorites=false;this._searchMode='library';this._searchCategory='all';this._searchSource='all';this._searchResults=null;this._searchLoadingOnline=false;this._recRows=new Map();this._view='home';this._type='playlist';this._grid=false;this._cache=new Map();this._items=[];this._seq=0;this._request=0;this._ready=false;this._offset=0;this._pending=false;this._searchTimer=null;this._activeMenuItem=null;}
+    constructor(){super();this.attachShadow({mode:'open'});this._favorites=false;this._searchMode='library';this._searchCategory='all';this._searchSource='all';this._searchResults=null;this._searchLoadingOnline=false;this._activeSearchQuery='';this._searchError=null;this._recRows=new Map();this._view='home';this._type='playlist';this._grid=false;this._cache=new Map();this._items=[];this._seq=0;this._request=0;this._ready=false;this._offset=0;this._pending=false;this._searchTimer=null;this._activeMenuItem=null;}
     static getConfigElement(){return document.createElement('music-home-card-editor');}
     static getStubConfig(hass){const entity=Object.values(hass.states??{}).find(x=>x.entity_id.startsWith('media_player.')&&x.attributes.mass_player_type);return {entity:entity?.entity_id??'',name:'Musik i huset'};}
     setConfig(config){this._cancelScreenHold();this._autoplaySession=(this._autoplaySession??0)+1;clearTimeout(this._clockTimer);if(!config.entity?.startsWith('media_player.'))throw new Error('Vælg Music Assistants media_player for Stueetagen.');this._config={name:'Musik i huset',height:'calc(100dvh - 64px)',start_view:'home',spotify_app:false,ai_dj:false,recommendation_rows:8,show_header_volume:true,show_header_refresh:true,show_header_logo:true,show_header_name:true,header_clock:false,header_clock_size:18,header_clock_position:'inline',...config};if(!this._config.ai_dj)this._searchMode='library';this._view=this._config.start_view;this._entry=this._config.config_entry_id??null;this._entryPromise=null;this._seq++;this._request++;this._cache.clear();this._ready=false;this._init();}
@@ -84,13 +85,13 @@ button[data-item-menu] svg{stroke-width:3.2}
     connectedCallback(){if(!this._visibilityListener)this._visibilityListener=()=>this._updateClock();document.addEventListener('visibilitychange',this._visibilityListener);if(this._ready&&this._hass){this._header();this._navigate(this._view);}else this._init();}
     disconnectedCallback(){this._cancelScreenHold();this._autoplaySession=(this._autoplaySession??0)+1;clearTimeout(this._clockTimer);document.removeEventListener('visibilitychange',this._visibilityListener);clearTimeout(this._searchTimer);this._seq++;this._request++;}
     getCardSize(){return 12;}
-    _init(){if(!this.isConnected||!this._config||!this._hass||this._ready)return;this._ready=true;this._playerKey=null;this._headerKey=null;this.shadowRoot.innerHTML=`<style>${CSS}</style><section class="shell"><header><div class="avatar">♪</div><h1></h1><div class="header-entities"></div><time class="header-clock" hidden></time><div class="header-volume" role="group" aria-label="Volumen"><button class="icon" data-volume-step="-5" aria-label="Skru ned">${icon('minus')}</button><span class="header-volume-value" aria-live="polite"></span><button class="icon" data-volume-step="5" aria-label="Skru op">${icon('plus')}</button></div><a class="app-link" href="app://com.spotify.music">Åbn Spotify-app</a><button class="icon" data-action="refresh" aria-label="Opdater bibliotek">${icon('refresh')}</button></header><main class="content"></main><section class="screensaver-panel" role="dialog" aria-label="Vælg visualisering" hidden></section><section class="item-menu-panel" role="dialog" aria-label="Musikvalg" hidden></section><div class="toast" role="status" aria-live="polite"></div><footer class="bottom"><div class="player"></div><nav></nav><section class="autoplay-panel" role="region" aria-label="Afspilningsvalg" hidden></section><div class="volume" hidden><span>Volumen</span><input type="range" min="0" max="100" step="1" aria-label="Volumen"><span class="volume-value"></span></div></footer></section>`;this.shadowRoot.querySelector('.shell').style.setProperty('--music-height',this._config.height);this.shadowRoot.querySelector('.app-link').hidden=!this._config.spotify_app;if(!this._bound){this._bound=true;this._bindScreenGestures();this.shadowRoot.addEventListener('click',e=>this._click(e));this.shadowRoot.addEventListener('input',e=>this._input(e));this.shadowRoot.addEventListener('change',e=>this._change(e));this.shadowRoot.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('[data-search]')){clearTimeout(this._searchTimer);this._search(e.target.value);}});this.shadowRoot.addEventListener('error',e=>{if(e.target.tagName==='IMG')e.target.remove();},true);}this._player();this._header();this._navigate(this._view);}
+    _init(){if(!this.isConnected||!this._config||!this._hass||this._ready)return;this._ready=true;this._playerKey=null;this._headerKey=null;this.shadowRoot.innerHTML=`<style>${CSS}</style><section class="shell"><header><div class="avatar">♪</div><h1></h1><div class="header-entities"></div><time class="header-clock" hidden></time><div class="header-volume" role="group" aria-label="Volumen"><button class="icon" data-volume-step="-5" aria-label="Skru ned">${icon('minus')}</button><span class="header-volume-value" aria-live="polite"></span><button class="icon" data-volume-step="5" aria-label="Skru op">${icon('plus')}</button></div><a class="app-link" href="app://com.spotify.music">Åbn Spotify-app</a><button class="icon" data-action="refresh" aria-label="Opdater bibliotek">${icon('refresh')}</button></header><main class="content"></main><section class="screensaver-panel" role="dialog" aria-label="Vælg visualisering" hidden></section><section class="item-menu-panel" role="dialog" aria-label="Musikvalg" hidden></section><div class="toast" role="status" aria-live="polite"></div><footer class="bottom"><div class="player"></div><nav></nav><section class="autoplay-panel" role="region" aria-label="Afspilningsvalg" hidden></section><div class="volume" hidden><span>Volumen</span><input type="range" min="0" max="100" step="1" aria-label="Volumen"><span class="volume-value"></span></div></footer></section>`;this.shadowRoot.querySelector('.shell').style.setProperty('--music-height',this._config.height);this.shadowRoot.querySelector('.app-link').hidden=!this._config.spotify_app;if(!this._bound){this._bound=true;this._bindScreenGestures();this.shadowRoot.addEventListener('click',e=>this._click(e));this.shadowRoot.addEventListener('input',e=>this._input(e));this.shadowRoot.addEventListener('change',e=>this._change(e));this.shadowRoot.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('[data-search]')){clearTimeout(this._searchTimer);e.target.blur();this._search(e.target.value);}});this.shadowRoot.addEventListener('search',e=>{if(e.target.matches('[data-search]')){clearTimeout(this._searchTimer);e.target.blur();this._search(e.target.value);}});this.shadowRoot.addEventListener('error',e=>{if(e.target.tagName==='IMG')e.target.remove();},true);}this._player();this._header();this._navigate(this._view);}
     _headerItems(){const configured=this._config.header_entities??Array.from({length:4},(_,i)=>({entity:this._config[`header_entity_${i+1}`],action_entity:this._config[`header_action_${i+1}`]}));return (Array.isArray(configured)?configured:[]).slice(0,4).map(x=>typeof x==='string'?{entity:x}:x).filter(x=>x&&typeof x.entity==='string'&&x.entity.includes('.'));}
     _header(){const c=this._config,root=this.shadowRoot;root.querySelector('.avatar').hidden=!c.show_header_logo;root.querySelector('h1').hidden=!c.show_header_name;root.querySelector('.header-volume').hidden=!c.show_header_volume;root.querySelector('[data-action="refresh"]').hidden=!c.show_header_refresh;const items=this._headerItems(),key=JSON.stringify(items.map(x=>[x,this._hass.states[x.entity]?.state,this._hass.states[x.entity]?.attributes]));if(key!==this._headerKey){this._headerKey=key;root.querySelector('.header-entities').innerHTML=items.map((x,i)=>{const e=this._hass.states[x.entity],a=e?.attributes??{},name=x.name??a.friendly_name??x.entity,state=e?this._hass.formatEntityState?.(e)??e.state:'Ikke tilgængelig',unit=a.unit_of_measurement??'',picture=url(a.entity_picture),label=state+(unit&&!String(state).includes(unit)?' '+unit:'');return `<button class="header-entity ${!e||['unknown','unavailable'].includes(e.state)?'unavailable':''}" data-header-entity="${i}" title="${esc(name+' · '+label)}" aria-label="${esc(name)}">${picture?`<img src="${esc(picture)}" alt="">`:`<ha-icon icon="${esc(x.icon??a.icon??(x.entity.startsWith('person.')?'mdi:account':'mdi:flash'))}"></ha-icon>`}<span>${x.show_name?`<small>${esc(name)}</small>`:''}${x.show_state===false?'':esc(label)}</span></button>`;}).join('');}root.querySelector('.header-entities').hidden=!items.length;root.querySelector('header').hidden=!items.length&&!c.header_clock&&!c.show_header_logo&&!c.show_header_name&&!c.show_header_volume&&!c.show_header_refresh&&!c.spotify_app;this._updateClock();}
     _updateClock(){clearTimeout(this._clockTimer);const clock=this.shadowRoot.querySelector('.header-clock');if(!clock)return;const size=Number(this._config.header_clock_size);clock.style.setProperty('--music-clock-size',`${Number.isFinite(size)&&size>0?Math.max(12,Math.min(64,size)):18}px`);clock.dataset.position=['left','right'].includes(this._config.header_clock_position)?this._config.header_clock_position:'inline';clock.hidden=!this._config.header_clock;if(clock.hidden||!this.isConnected)return;const now=new Date();clock.textContent=now.toLocaleTimeString(this._hass?.locale?.language??'da-DK',{hour:'2-digit',minute:'2-digit',hour12:this._hass?.locale?.time_format==='12'?true:this._hass?.locale?.time_format==='24'?false:undefined});clock.dateTime=now.toISOString();if(!document.hidden)this._clockTimer=setTimeout(()=>this._updateClock(),60000-Date.now()%60000+20);}
     async _headerAction(index){const item=this._headerItems()[index];if(!item)return;const entity=item.action_entity||item.entity,domain=entity.split('.')[0],service={script:'turn_on',scene:'turn_on',button:'press',input_button:'press',switch:'toggle',input_boolean:'toggle',light:'toggle',fan:'toggle',automation:'trigger'}[domain];if(service)await this._hass.callService(domain,service,{entity_id:entity});else this.dispatchEvent(new CustomEvent('hass-more-info',{detail:{entityId:entity},bubbles:true,composed:true}));}
     async _configEntry(){if(this._entry)return this._entry;const entity=this._config.entity;if(!this._entryPromise)this._entryPromise=this._hass.callWS({type:'config/entity_registry/get',entity_id:this._config.entity}).then(x=>{if(entity!==this._config.entity)throw Error('Afspiller ændret');if(x.platform!=='music_assistant'||!x.config_entry_id)throw Error('Vælg MA-versionen af højttaleren, ikke den almindelige Sonos-entitet.');return this._entry=x.config_entry_id;}).catch(e=>{this._entryPromise=null;throw e;});return this._entryPromise;}
-    async _service(service,data={},response=false){const msg={type:'call_service',domain:'music_assistant',service,service_data:data};if(response)msg.return_response=true;const result=await this._hass.callWS(msg);return response?result.response:result;}
+    async _service(service,data={},response=false){const msg={type:'call_service',domain:'music_assistant',service,service_data:data};if(response)msg.return_response=true;const result=await this._hass.callWS(msg);if(!response)return result;return result?.response??result?.service_response??result;}
     async _library(type,extra={}){const entry=await this._configEntry();const key=JSON.stringify([entry,type,extra]);const cached=this._cache.get(key);if(cached&&Date.now()-cached.at<60000)return cached.items;const r=await this._service('get_library',{config_entry_id:entry,media_type:type,limit:20,...extra},true);if(!Array.isArray(r?.items))throw Error('MA returnerede ikke et bibliotek. Kontrollér at HA har Music Assistant → Get library.');const items=r.items.map(itemOf).filter(x=>x.uri);this._cache.set(key,{at:Date.now(),items});return items;}
 
     _hasBridge(name){return !!this._hass?.services?.rest_command?.[name];}
@@ -192,16 +193,27 @@ button[data-item-menu] svg{stroke-width:3.2}
       const getList=key=>sortByProvider(filterBySource(this._searchResults[key]??[]));
       const onlineStatusHtml=this._searchLoadingOnline?`<div class="search-online-status">${icon('refresh')}<span>Søger online kilder (Spotify, YouTube)…</span></div>`:'';
 
+      if(this._searchError&&!this._hasAnyResults()){
+        dest.innerHTML=`<div class="notice error"><p><strong>Søgningen fejlede:</strong> ${esc(this._searchError)}</p><button class="secondary" data-action="search-retry">${icon('refresh')} Prøv igen</button></div>`;
+        return;
+      }
+
+      const errorNoticeHtml=this._searchError?`<div class="notice error" style="margin-bottom:12px;padding:8px 12px;background:#ff444422;border-radius:8px">Online kilder svarede ikke (${esc(this._searchError)}). Viser biblioteksresultater. <button class="secondary" data-action="search-retry" style="margin-left:8px;padding:4px 10px;font-size:12px">Prøv igen</button></div>`:'';
+
       if(cat!=='all'){
         const typeMap={playlists:'playlist',tracks:'track',albums:'album',artists:'artist'};
         const type=typeMap[cat]??'track';
         const list=getList(cat);
         const title=SEARCH_LABELS[type]??'Resultater';
         if(!list.length){
-          dest.innerHTML=onlineStatusHtml+`<p class="empty">Ingen ${title.toLowerCase()} fundet${this._searchSource!=='all'?` for ${this._searchSource}`:''}.${this._searchLoadingOnline?' Søger stadig online…':''}</p>`;
+          if(this._searchLoadingOnline){
+            dest.innerHTML=`<div class="search-online-status" style="padding:28px 0;justify-content:center">${icon('refresh')}<span>Søger efter ${title.toLowerCase()}…</span></div>`;
+            return;
+          }
+          dest.innerHTML=errorNoticeHtml+`<p class="empty">Ingen ${title.toLowerCase()} fundet${this._searchSource!=='all'?` for ${this._searchSource}`:''}.</p>`;
           return;
         }
-        dest.innerHTML=onlineStatusHtml+`<div class="section-head"><h2>${esc(title)} <span class="search-count">(${list.length})</span></h2></div><div class="${type==='track'?'rows':'grid'}">${list.map(x=>type==='track'?this._row(x,true):this._tile(x,true)).join('')}</div>`;
+        dest.innerHTML=errorNoticeHtml+onlineStatusHtml+`<div class="section-head"><h2>${esc(title)} <span class="search-count">(${list.length})</span></h2></div><div class="${type==='track'?'rows':'grid'}">${list.map(x=>type==='track'?this._row(x,true):this._tile(x,true)).join('')}</div>`;
         return;
       }
 
@@ -218,29 +230,43 @@ button[data-item-menu] svg{stroke-width:3.2}
         sectionsHtml+=`<section><div class="section-head"><h2>${esc(title)} <span class="search-count">(${list.length})</span></h2>${canExpand?`<button data-search-cat="${key}">Vis alle (${list.length})</button>`:''}</div><div class="${layout}">${displayList.map(x=>type==='track'?this._row(x,true):this._tile(x,true)).join('')}</div></section>`;
       }
       if(!totalCount){
-        dest.innerHTML=onlineStatusHtml+`<p class="empty">Ingen resultater${this._searchSource!=='all'?` for ${this._searchSource}`:''}. Prøv en anden søgning eller vælg Alle kilder.${this._searchLoadingOnline?' Søger online…':''}</p>`;
+        if(this._searchLoadingOnline){
+          dest.innerHTML=`<div class="search-online-status" style="padding:28px 0;justify-content:center">${icon('refresh')}<span>Søger efter &ldquo;${esc(this._activeSearchQuery)}&rdquo;${this._searchSource!=='all'?` i ${this._searchSource}`:''}…</span></div>`;
+          return;
+        }
+        dest.innerHTML=errorNoticeHtml+`<p class="empty">Ingen resultater${this._searchSource!=='all'?` for ${this._searchSource}`:''}. Prøv en anden søgning eller vælg Alle kilder.</p>`;
         return;
       }
-      dest.innerHTML=onlineStatusHtml+sectionsHtml;
+      dest.innerHTML=errorNoticeHtml+onlineStatusHtml+sectionsHtml;
     }
     async _search(query){
       query=query.trim();
-      const request=++this._request,seq=this._seq;
       const dest=this.shadowRoot.querySelector('.search-results');
       const controls=this.shadowRoot.querySelector('.search-controls');
       if(!dest)return;
       if(!query){
+        this._activeSearchQuery='';
         this._searchResults=null;
+        this._searchError=null;
         this._searchLoadingOnline=false;
         if(controls)controls.hidden=true;
         dest.innerHTML=`<p class="notice">Søg efter sange, album, kunstnere eller playlister.</p><div class="pills">${Object.entries(SEARCH_LABELS).filter(([k])=>k!=='track').map(([k,n])=>`<button class="pill" data-library="${k}">${n}</button>`).join('')}</div>`;
         return;
       }
+      if(query===this._activeSearchQuery&&this._searchLoadingOnline)return;
+      if(query===this._activeSearchQuery&&this._searchResults&&!this._searchError){
+        if(controls)controls.hidden=false;
+        this._updateSearchPills();
+        return this._renderSearchResults();
+      }
       if(controls)controls.hidden=false;
       this._updateSearchPills();
 
       if(this._searchMode==='ai'){
+        this._activeSearchQuery=query;
+        this._searchError=null;
         this._searchLoadingOnline=true;
+        const request=++this._request,seq=this._seq;
         dest.innerHTML='<p class="notice">AI DJ søger…</p>';
         try{
           const tracks=await this._aiSearch(query,seq,request,dest);
@@ -251,14 +277,17 @@ button[data-item-menu] svg{stroke-width:3.2}
           if(seq===this._seq&&request===this._request)dest.innerHTML=`<p class="notice error">${esc(e.message??e)}</p>`;
           return;
         }finally{
-          this._searchLoadingOnline=false;
+          if(seq===this._seq&&request===this._request)this._searchLoadingOnline=false;
         }
         return;
       }
 
+      this._activeSearchQuery=query;
+      this._searchError=null;
       this._searchLoadingOnline=true;
+      const request=++this._request,seq=this._seq;
       this._searchResults={playlists:[],tracks:[],albums:[],artists:[],radio:[],podcasts:[],audiobooks:[]};
-      dest.innerHTML=`<div class="search-online-status">${icon('refresh')}<span>Søger i bibliotek og online kilder…</span></div>`;
+      this._renderSearchResults();
 
       try{
         const entry=await this._configEntry();
@@ -279,8 +308,9 @@ button[data-item-menu] svg{stroke-width:3.2}
           }
         });
 
-        const global=await globalPromise;
+        const globalRes=await globalPromise;
         if(seq!==this._seq||request!==this._request||!this.isConnected)return;
+        const global=globalRes?.response??globalRes?.service_response??globalRes;
         const convert=list=>(Array.isArray(list)?list:[]).map(itemOf).filter(x=>x.uri);
         this._mergeSearchResults({
           playlists:convert(global?.playlists),
@@ -292,8 +322,8 @@ button[data-item-menu] svg{stroke-width:3.2}
           audiobooks:convert(global?.audiobooks)
         });
       }catch(e){
-        if(seq===this._seq&&request===this._request&&!this._hasAnyResults()){
-          dest.innerHTML=`<p class="notice error">${esc(e.message??e)}</p>`;
+        if(seq===this._seq&&request===this._request){
+          this._searchError=e.message??String(e);
         }
       }finally{
         if(seq===this._seq&&request===this._request&&this.isConnected){
@@ -377,6 +407,7 @@ button[data-item-menu] svg{stroke-width:3.2}
           case 'repeat':{const entity=this._config.entity,state=this._hass.states[entity];if(this._repeatPending||!state||['unknown','unavailable'].includes(state.state))return;this._repeatPending=entity;this._player();try{await this._hass.callService('media_player','repeat_set',{entity_id:entity,repeat:state.attributes.repeat==='all'?'off':'all'});}finally{this._repeatPending=null;this._player();}break;}
           case 'shuffle':{const entity=this._config.entity,state=this._hass.states[entity];if(this._shufflePending||!state||['unknown','unavailable'].includes(state.state))return;this._shufflePending=entity;this._player();try{await this._hass.callService('media_player','shuffle_set',{entity_id:entity,shuffle:state.attributes.shuffle!==true});}finally{this._shufflePending=null;this._player();}break;}
           case 'ai-search':return this._search(this.shadowRoot.querySelector('[data-search]').value);
+          case 'search-retry':{const q=this.shadowRoot.querySelector('[data-search]')?.value??'';this._activeSearchQuery='';return this._search(q);}
           case 'favorites-toggle':this._favorites=!this._favorites;if(this._type==='all'&&!this._favorites)this._type='playlist';return this._loadLibrary();
           case 'refresh':this._cache.clear();return this._navigate(this._view);
           case 'back':return this._navigate(this._view);
@@ -386,7 +417,7 @@ button[data-item-menu] svg{stroke-width:3.2}
         }
       }catch(error){this._message(error.message??String(error));}
     }
-    _input(e){if(e.target.matches('[data-search]')){clearTimeout(this._searchTimer);this._request++;const value=e.target.value;if(this._searchMode==='ai')return;this._searchTimer=setTimeout(()=>this._search(value),450);}if(e.target.matches('.volume input'))this.shadowRoot.querySelector('.volume-value').textContent=e.target.value+' %';}
+    _input(e){if(e.target.matches('[data-search]')){clearTimeout(this._searchTimer);const value=e.target.value;if(this._searchMode==='ai')return;this._searchTimer=setTimeout(()=>this._search(value),500);}if(e.target.matches('.volume input'))this.shadowRoot.querySelector('.volume-value').textContent=e.target.value+' %';}
     _cancelScreenHold(){clearTimeout(this._screenHoldTimer);this._screenHold=null;}
     _bindScreenGestures(){
       this.shadowRoot.addEventListener('pointerdown',e=>{

@@ -1,3 +1,11 @@
+## 0.2.21 — Robust søgning, fejlbevarelse og berøringsvenlig tastaturlukning
+
+- **Fejlbevarelse ved søgninger**: Fejl fra Music Assistant (f.eks. ved netværkstimeout eller backend-fejl) overskrives ikke længere af falske "Ingen resultater"-beskeder. Den præcise fejl vises nu tydeligt med en "Prøv igen"-knap. Hvis der findes lokale biblioteksresultater, vises disse fortsat sammen med en advarselsbjælke om online kilder.
+- **Deduplikering og stabilitet ved hurtig indtastning**: Tryk på Enter eller søgeknappen på touch-tastaturet annullerer ikke længere den igangværende søgning mod Music Assistant, hvis søgeordet er uændret. Gentagne forespørgsler for samme søgestreng genbruger det igangværende opslag.
+- **Tydelig indlæsningsstatus under søgning**: Når der skiftes mellem filtre (f.eks. Spotify, YouTube eller kategorier) mens Music Assistant stadig søger online, vises en indlæsningsindikator i stedet for en for tidlig "Ingen resultater for spotify"-besked.
+- **Automatisk lukning af skærmtastatur på touchskærme**: Ved tryk på Enter / Søg på virtuelle skærmtastaturer (f.eks. på vægtablets) fjernes fokus (`blur`), så tastaturet automatisk trækker sig tilbage og gør plads til søgeresultater og albumcovers.
+- **Bredere genkendelse af Spotify-kilder**: CDN-billedadresser fra `spotifycdn.com` og providerspecifikke attributter genkendes nu konsekvent af kildeklassificeringen.
+
 ## 0.2.20 — sikre visualiseringsvalg
 
 Music Home viser nu kun visualiseringer, som den valgte HA-select faktisk tilbyder. Kendte navne er kun visningsetiketter og tilsidesætter aldrig HA's muligheder. Valget kontrolleres igen ved tryk; et afvist valg starter hverken screensaver-switch eller visningsscript, og knappen frigives efter fejl.
