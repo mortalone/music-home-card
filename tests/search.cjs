@@ -129,6 +129,22 @@ const Card = vm.runInNewContext(`(class {
   assert.equal(searchServiceCalls, 1, 'Duplicate query while in-flight must result in exactly 1 service call');
   assert(card._hasAnyResults(), 'Results must be merged');
 
+  // Test: AI DJ consecutive search on error with same query must re-execute _aiSearch and not return stale cached results
+  let aiSearchCalls = 0;
+  card._searchMode = 'ai';
+  card._aiSearch = async (prompt) => {
+    aiSearchCalls++;
+    if (aiSearchCalls === 1) throw new Error('Adgang afvist. Kontrollér tokenet i HA secrets.');
+    throw new Error('AI DJ-forbindelsen mangler.');
+  };
+  await card._search('fejl');
+  assert.equal(aiSearchCalls, 1, 'First AI search executed');
+  assert(dest.innerHTML.includes('Adgang afvist'), 'First error rendered');
+  // Second search with identical query must execute again
+  await card._search('fejl');
+  assert.equal(aiSearchCalls, 2, 'Second AI search with same query must re-execute');
+  assert(dest.innerHTML.includes('AI DJ-forbindelsen mangler'), 'Second error rendered instead of stale cache');
+
   console.log('Search deduplication, error preservation, provider detection, and loading tests passed.');
 })().catch(e => {
   console.error(e);

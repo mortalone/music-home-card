@@ -253,17 +253,10 @@ button[data-item-menu] svg{stroke-width:3.2}
         dest.innerHTML=`<p class="notice">Søg efter sange, album, kunstnere eller playlister.</p><div class="pills">${Object.entries(SEARCH_LABELS).filter(([k])=>k!=='track').map(([k,n])=>`<button class="pill" data-library="${k}">${n}</button>`).join('')}</div>`;
         return;
       }
-      if(query===this._activeSearchQuery&&this._searchLoadingOnline)return;
-      if(query===this._activeSearchQuery&&this._searchResults&&!this._searchError){
-        if(controls)controls.hidden=false;
-        this._updateSearchPills();
-        return this._renderSearchResults();
-      }
-      if(controls)controls.hidden=false;
-      this._updateSearchPills();
-
       if(this._searchMode==='ai'){
+        if(query===this._activeSearchQuery&&this._searchLoadingOnline)return;
         this._activeSearchQuery=query;
+        this._searchResults=null;
         this._searchError=null;
         this._searchLoadingOnline=true;
         const request=++this._request,seq=this._seq;
@@ -274,13 +267,25 @@ button[data-item-menu] svg{stroke-width:3.2}
           this._searchResults={playlists:[],tracks:tracks.map(itemOf).filter(x=>x.uri),albums:[],artists:[],radio:[],podcasts:[],audiobooks:[]};
           this._renderSearchResults();
         }catch(e){
-          if(seq===this._seq&&request===this._request)dest.innerHTML=`<p class="notice error">${esc(e.message??e)}</p>`;
+          if(seq===this._seq&&request===this._request){
+            this._searchError=e.message??String(e);
+            dest.innerHTML=`<p class="notice error">${esc(e.message??e)}</p>`;
+          }
           return;
         }finally{
           if(seq===this._seq&&request===this._request)this._searchLoadingOnline=false;
         }
         return;
       }
+
+      if(query===this._activeSearchQuery&&this._searchLoadingOnline)return;
+      if(query===this._activeSearchQuery&&this._searchResults&&!this._searchError){
+        if(controls)controls.hidden=false;
+        this._updateSearchPills();
+        return this._renderSearchResults();
+      }
+      if(controls)controls.hidden=false;
+      this._updateSearchPills();
 
       this._activeSearchQuery=query;
       this._searchError=null;
