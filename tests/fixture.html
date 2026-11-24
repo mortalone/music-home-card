@@ -24,7 +24,7 @@ window.testHass={services:{rest_command:Object.fromEntries(['music_home_queue_it
    else throw Error('Unknown bridge service');return {response:{status:200,content}};
   }if(msg.service==='get_library'){if(d.search==='playlist-only'&&d.media_type==='playlist')return {response:{items:[item('playlist','Min gemte playliste',77)]}};if(d.search&&d.media_type==='playlist')return {response:{items:[]}};if(failLibrary)throw Error('MA er offline');if(d.config_entry_id!=='ma-fixture')throw Error('Wrong MA instance');const items=(lists[d.media_type]??[]).map((name,i)=>item(d.media_type,name,i));return {response:{items:items.slice(d.offset??0,(d.offset??0)+(d.limit??20))}};}
   if(msg.service==='search'){if(delays[d.name])await new Promise(r=>setTimeout(r,delays[d.name]));return {response:{tracks:[item('track',d.name,0)],albums:[item('album','Maison',4)],playlists:[item('playlist','Sweet1',0)],artists:[],radio:[],podcasts:[],audiobooks:[]}};}
-  if(msg.service==='play_media'){if(d.entity_id!=='media_player.stueetagen_ma'||!d.media_id.startsWith('library://'))throw Error('Wrong playback target');return {};}
+  if(msg.service==='play_media'){const targetOk=d.entity_id==='media_player.stueetagen_ma';const idOk=Array.isArray(d.media_id)?d.media_id.every(id=>typeof id==='string'&&(id.startsWith('library://')||id.includes('://'))):typeof d.media_id==='string'&&(d.media_id.startsWith('library://')||d.media_id.includes('://'));if(!targetOk||!idOk)throw Error('Wrong playback target');return {};}
   throw Error('Unknown MA service');
  }};
 const card=document.querySelector('music-home-card');card.setConfig({entity:'media_player.stueetagen_ma',name:'Musik i huset',height:'calc(100dvh - 56px)',spotify_app:true});card.hass=testHass;window.card=card;

@@ -1,3 +1,9 @@
+## 0.2.22 — Intelligent playliste-afspilning og flydende overgang til Smart Uendelig
+
+- **Playliste-kontinuitet fra valgt nummer**: Ved tryk på et nummer i en åbnet playliste (eller album) afspilles ikke længere kun dét enkelte nummer isoleret. Kortet lægger automatisk resten af listen i køen fra det valgte nummer ned til bunden, så playlisten afspilles færdig, før Music Assistants automatiske fortsættelse (Smart Uendelig / Autoplay) tager over.
+- **Random / Shuffle understøttelse**: Hvis tilfældig rækkefølge (`shuffle`) er aktiveret på afspilleren, inkluderes alle playlistens numre i køen med det valgte nummer først og resten blandet tilfældigt, så hele listen afspilles, før der skiftes til Smart Uendelig.
+- **Respekterer position uanset startsted**: Hvad enten man starter fra toppen, midt i listen eller 2 numre fra bunden, afspilles de resterende numre i rækkefølge til slutningen af listen.
+
 ## 0.2.21 — Robust søgning, fejlbevarelse og berøringsvenlig tastaturlukning
 
 - **Fejlbevarelse ved søgninger**: Fejl fra Music Assistant (f.eks. ved netværkstimeout eller backend-fejl) overskrives ikke længere af falske "Ingen resultater"-beskeder. Den præcise fejl vises nu tydeligt med en "Prøv igen"-knap. Hvis der findes lokale biblioteksresultater, vises disse fortsat sammen med en advarselsbjælke om online kilder.
